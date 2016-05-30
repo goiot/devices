@@ -1,5 +1,7 @@
 #Grove - OLED 96×96
 
+[![GoDoc](http://godoc.org/github.com/goiot/drivers/i2c/grove/oled96x96?status.png)](http://godoc.org/github.com/goiot/drivers/i2c/grove/oled96x96)
+
 Reference: http://www.seeedstudio.com/wiki/Grove_-_OLED_Display_1.12%22
 
 This device is a 16 color grayscale 96×96 dot matrix OLED display module with Grove compatible
