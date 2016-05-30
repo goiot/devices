@@ -1,13 +1,15 @@
-package oled96x96
+package oled96x96_test
 
-func ExampleHelloWorld() {
+import "github.com/goiot/drivers/i2c/grove/oled96x96"
+
+func Example() {
 	bus := &i2c.Devfs{
 		// change the following value if you use another bus
 		Dev:  "/dev/i2c-1",
-		Addr: Address,
+		Addr: oled96x96.Address,
 	}
 
-	display, err := New(bus)
+	display, err := oled96x96.New(bus)
 	if err != nil {
 		panic(err)
 	}
