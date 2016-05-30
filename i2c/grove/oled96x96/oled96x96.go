@@ -28,10 +28,9 @@ var (
 )
 
 var (
-
 	// buffer sent to indicate the following data belongs to a command
-	cmdCmd = []byte{0x80}
-    dataCmd = []byte{0x40}
+	cmdCmd  = []byte{0x80}
+	dataCmd = []byte{0x40}
 )
 
 const (
@@ -39,7 +38,7 @@ const (
 	HorizontalModeFlag = 02
 
 	// Address is the i2c address of the device
-	Address  = 0x3c
+	Address = 0x3c
 
 	lockUnlockCmd    byte = 0xFD // takes a 2nd arg byte
 	startLineCmd     byte = 0xA1 // takes a 2nd arg byte
@@ -49,7 +48,7 @@ const (
 	setColAddrCmd    byte = 0x15 // takes 3 arg bytes
 
 	normalDisplayCmd   byte = 0xA4
-	InverseDisplayCmd       = 0xA7
+	inverseDisplayCmd  byte = 0xA7
 	ActivateScrollCmd       = 0x2F
 	DectivateScrollCmd      = 0x2E
 	contrastLevelCmd        = 0x81
@@ -58,6 +57,7 @@ const (
 // Oled96x96 represents the Grove Oled 96x96 display.
 type Oled96x96 struct {
 	Conn  driver.Conn
+	Font  Font
 	grayH byte
 	grayL byte
 }
@@ -70,7 +70,7 @@ func New(o driver.Opener) (*Oled96x96, error) {
 		return nil, err
 	}
 
-	display := &Oled96x96{Conn: conn}
+	display := &Oled96x96{Conn: conn, Font: ASCIIFont}
 
 	// Unlock OLED driver IC MCU interface from entering command. i.e: Accept commands
 	// Note: locking/unlocking could be exposed to developers later on if needed.
@@ -177,6 +177,8 @@ func New(o driver.Opener) (*Oled96x96, error) {
 	//
 	display.sendCmd(setColAddrCmd, 0x08, 0x37) // Set Column Address
 
+	display.Clear()
+
 	// Init gray level for text. Default:Brightest White
 	display.grayH = 0xF0
 	display.grayL = 0x0F
@@ -202,11 +204,11 @@ func (o *Oled96x96) On() error {
 // Clear clears the whole screen. Should be used before starting a fresh start or after scroll deactivation.
 // This function also sets the cursor to top left corner.
 func (o *Oled96x96) Clear() {
-    for i:=0;i<48;i++ {
-        for j=0;j<96;j++) {
-            o.sendData(0x00)
-        }
-    }
+	for i := 0; i < 48; i++ {
+		for j := 0; j < 96; j++ {
+			o.sendData(0x00)
+		}
+	}
 }
 
 // Normal sets the display in mormal mode (colors aren't inversed)
@@ -215,7 +217,9 @@ func (o *Oled96x96) Normal() error {
 }
 
 // Inverse sets the display to inverse mode (colors are inversed)
-func (o *Oled96x96) Inverse() {}
+func (o *Oled96x96) Inverse() error {
+	return o.sendCmd(inverseDisplayCmd)
+}
 
 // ContrastLevel sets the contrast ratio of OLED display.
 // The level can be any number between 0 - 255.
@@ -252,7 +256,45 @@ func (o *Oled96x96) PositionCursor(row, col int) error {
 }
 
 // Write prints the content of the passed text at the cursor's.
-func (o *Oled96x96) Write(txt string) error { return nil }
+func (o *Oled96x96) Write(txt string) error {
+	var c, bit1, bit2 byte
+	data := []byte{}
+	letterLen := len(o.Font)
+
+	convertChar := func(r rune) []byte {
+		n := int(r)
+		var j uint8
+		for i := 0; i < 8; i = i + 2 {
+			for j = 0; j < 8; j++ {
+				c, bit1, bit2 = 0x00, 0x00, 0x00
+				// Character is constructed two pixel at a time using vertical mode from the default 8x8 font
+				if n-32 <= letterLen {
+					bit1 = (o.Font[n-32][i] >> j)
+					bit1 &= 0x01
+					bit2 = (o.Font[n-32][i+1] >> j)
+					bit2 &= 0x01
+				}
+				// Each bit is changed to a nibble
+				c |= bit1 //?o.grayH:0x00
+				c |= o.grayH
+				c |= bit2 //?o.grayL:0x00
+				c |= o.grayL
+				data = append(data, c)
+			}
+		}
+		return data
+	}
+
+	stream := []byte{}
+	for _, b := range txt {
+		if b < 32 || b > 127 {
+			b = ' '
+		}
+		stream = append(stream, convertChar(b)...)
+	}
+
+	return o.sendData(stream...)
+}
 
 // DrawBitmap displays a binary bitmap on the OLED matrix.
 // The data is provided through a slice holding bitmap.
@@ -291,6 +333,6 @@ func (o *Oled96x96) sendCmd(buf ...byte) error {
 
 // sendData does what you expect it does and maybe even more
 func (o *Oled96x96) sendData(buf ...byte) error {
-    data := append(dataCmd, buf...)
-    return o.Conn.Write(data)
+	data := append(dataCmd, buf...)
+	return o.Conn.Write(data)
 }
