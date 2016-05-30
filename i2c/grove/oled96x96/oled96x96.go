@@ -24,7 +24,7 @@ func New(o driver.Opener) (*Oled96x96, error) {
 		return nil, err
 	}
 
-	display := &Oled96x96{Conn: conn, Font: ASCIIFont}
+	display := &Oled96x96{Conn: conn, Font: DefaultFont()}
 
 	// Unlock OLED driver IC MCU interface from entering command. i.e: Accept commands
 	// Note: locking/unlocking could be exposed to developers later on if needed.
@@ -242,6 +242,7 @@ func (o *Oled96x96) Write(txt string) error {
 	var c, bit1, bit2 byte
 	letterLen := len(o.Font)
 
+	// TODO (mattetti): support unicode
 	pushChar := func(r rune) error {
 		n := int(r)
 		var j uint8
@@ -249,11 +250,10 @@ func (o *Oled96x96) Write(txt string) error {
 			for j = 0; j < 8; j++ {
 				c, bit1, bit2 = 0x00, 0x00, 0x00
 				// Character is constructed two pixel at a time using vertical mode from the default 8x8 font
-				if n-32 <= letterLen {
-					bit1 = (o.Font[n-32][i] >> j) & 0x01
-					bit2 = (o.Font[n-32][i+1] >> j) & 0x01
-				} else {
-					fmt.Println("out of index letter")
+				// Guard to prevent using characters not supported in the used font.
+				if n <= letterLen {
+					bit1 = (o.Font[n][i] >> j) & 0x01
+					bit2 = (o.Font[n][i+1] >> j) & 0x01
 				}
 				// Each bit is changed to a nibble
 				if bit1 > 0 {
@@ -275,9 +275,6 @@ func (o *Oled96x96) Write(txt string) error {
 	}
 
 	for _, b := range txt {
-		if b < 32 || b > 127 {
-			b = ' '
-		}
 		if err := pushChar(b); err != nil {
 			return err
 		}
