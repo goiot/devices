@@ -133,7 +133,7 @@ func New(o driver.Opener) (*Oled96x96, error) {
 
 	display.Clear()
 
-	// Init gray level for text. Default:Brightest White
+	// Init gray level for text.
 	display.grayH = 0xF0
 	display.grayL = 0x0F
 
@@ -169,12 +169,11 @@ func (o *Oled96x96) On() error {
 
 // Clear clears the whole screen. Should be used before starting a fresh start or after scroll deactivation.
 // This function also sets the cursor to top left corner.
-func (o *Oled96x96) Clear() {
-	for i := 0; i < 48; i++ {
-		for j := 0; j < 96; j++ {
-			o.sendData(0x00)
-		}
-	}
+func (o *Oled96x96) Clear() error {
+	// 48*96 = 4608
+	nullData := make([]byte, 4609)
+	nullData[0] = dataCmd
+	return o.Conn.Write(nullData)
 }
 
 // Normal sets the display in mormal mode (colors aren't inversed)
