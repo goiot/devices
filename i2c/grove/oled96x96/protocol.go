@@ -27,8 +27,8 @@ var (
 )
 
 const (
-	VerticalModeFlag   = 01
-	HorizontalModeFlag = 02
+	// VerticalModeFlag   = 01
+	// HorizontalModeFlag = 02
 
 	// Address is the i2c address of the device
 	Address = 0x3c
@@ -44,9 +44,9 @@ const (
 
 	normalDisplayCmd   byte = 0xA4
 	inverseDisplayCmd  byte = 0xA7
-	ActivateScrollCmd       = 0x2F
-	DectivateScrollCmd      = 0x2E
-	contrastLevelCmd        = 0x81
+	activateScrollCmd  byte = 0x2F
+	dectivateScrollCmd byte = 0x2E
+	contrastLevelCmd   byte = 0x81
 )
 
 // sendCmd sends the passed data preluded by the command byte
