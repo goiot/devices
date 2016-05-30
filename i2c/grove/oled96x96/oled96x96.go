@@ -29,8 +29,8 @@ var (
 
 var (
 	// buffer sent to indicate the following data belongs to a command
-	cmdCmd  = []byte{0x80}
-	dataCmd = []byte{0x40}
+	cmdCmdBuf  = []byte{cmdCmd, 0x0}
+	dataCmdBuf = []byte{dataCmd, 0x0}
 )
 
 const (
@@ -40,6 +40,8 @@ const (
 	// Address is the i2c address of the device
 	Address = 0x3c
 
+	cmdCmd           byte = 0x80
+	dataCmd          byte = 0x40
 	lockUnlockCmd    byte = 0xFD // takes a 2nd arg byte
 	startLineCmd     byte = 0xA1 // takes a 2nd arg byte
 	displayOffCmd    byte = 0xAE
@@ -97,9 +99,9 @@ func New(o driver.Opener) (*Oled96x96, error) {
 		return display, fmt.Errorf("setting the display offset failed - %v", err)
 	}
 
-	// set the remap
-	if err := display.sendCmd(0xA0, 0x46); err != nil {
-		return display, fmt.Errorf("setting the remap failed - %v", err)
+	// set the remap to vertical mode
+	if err := display.VerticalMode(); err != nil {
+		return display, fmt.Errorf("setting vertical mode failed - %v", err)
 	}
 
 	// set the VDD regulator
@@ -175,13 +177,25 @@ func New(o driver.Opener) (*Oled96x96, error) {
 	// Start from 8th Column of driver IC. This is 0th Column for OLED
 	// End at  (8 + 47)th column. Each Column has 2 pixels(segments)
 	//
-	display.sendCmd(setColAddrCmd, 0x08, 0x37) // Set Column Address
+	display.sendCmd(setColAddrCmd, 0x08, 0x37)
 
 	display.Clear()
 
 	// Init gray level for text. Default:Brightest White
 	display.grayH = 0xF0
 	display.grayL = 0x0F
+
+	if err := display.Normal(); err != nil {
+		return display, fmt.Errorf("setting the display to normal failed - %v", err)
+	}
+
+	if err := display.VerticalMode(); err != nil {
+		return display, fmt.Errorf("setting vertical mode failed - %v", err)
+	}
+
+	if err := display.PositionCursor(0, 0); err != nil {
+		return display, fmt.Errorf("resetting cursor's position failed - %v", err)
+	}
 
 	return display, nil
 }
@@ -231,11 +245,27 @@ func (o *Oled96x96) ContrastLevel(level int) error {
 }
 
 // HorizontalMode configures the display to horizontal addressing mode.
-func (o *Oled96x96) HorizontalMode() {}
+func (o *Oled96x96) HorizontalMode() error {
+	// horizontal mode
+	if err := o.sendCmd(0xA0, 0x42); err != nil {
+		return err
+	}
+	// row address (0 to 95)
+	if err := o.sendCmd(0x75, 0x00, 0x5f); err != nil {
+		return err
+	}
+	// col address
+	if err := o.sendCmd(0x15, 0x08, 0x37); err != nil {
+		return err
+	}
+	return nil
+}
 
 // VerticalMode configures the display to vertical addressing mode.
 // The display must be set to vertical mode before printing text.
-func (o *Oled96x96) VerticalMode() {}
+func (o *Oled96x96) VerticalMode() error {
+	return o.sendCmd(0xA0, 0x46)
+}
 
 // PositionCursor sets the text's position (cursor) to Xth Text Row, Yth Text Column.
 // The 96x96 OLED is divided into 12 rows and 12 Columns of text.
@@ -258,10 +288,9 @@ func (o *Oled96x96) PositionCursor(row, col int) error {
 // Write prints the content of the passed text at the cursor's.
 func (o *Oled96x96) Write(txt string) error {
 	var c, bit1, bit2 byte
-	data := []byte{}
 	letterLen := len(o.Font)
 
-	convertChar := func(r rune) []byte {
+	pushChar := func(r rune) error {
 		n := int(r)
 		var j uint8
 		for i := 0; i < 8; i = i + 2 {
@@ -269,31 +298,40 @@ func (o *Oled96x96) Write(txt string) error {
 				c, bit1, bit2 = 0x00, 0x00, 0x00
 				// Character is constructed two pixel at a time using vertical mode from the default 8x8 font
 				if n-32 <= letterLen {
-					bit1 = (o.Font[n-32][i] >> j)
-					bit1 &= 0x01
-					bit2 = (o.Font[n-32][i+1] >> j)
-					bit2 &= 0x01
+					bit1 = (o.Font[n-32][i] >> j) & 0x01
+					bit2 = (o.Font[n-32][i+1] >> j) & 0x01
+				} else {
+					fmt.Println("out of index letter")
 				}
 				// Each bit is changed to a nibble
-				c |= bit1 //?o.grayH:0x00
-				c |= o.grayH
-				c |= bit2 //?o.grayL:0x00
-				c |= o.grayL
-				data = append(data, c)
+				if bit1 > 0 {
+					c |= o.grayH
+				} else {
+					c |= 0x00
+				}
+				if bit2 > 0 {
+					c |= o.grayL
+				} else {
+					c |= 0x00
+				}
+				if err := o.sendData(c); err != nil {
+					return err
+				}
 			}
 		}
-		return data
+		return nil
 	}
 
-	stream := []byte{}
 	for _, b := range txt {
 		if b < 32 || b > 127 {
 			b = ' '
 		}
-		stream = append(stream, convertChar(b)...)
+		if err := pushChar(b); err != nil {
+			return err
+		}
 	}
 
-	return o.sendData(stream...)
+	return nil
 }
 
 // DrawBitmap displays a binary bitmap on the OLED matrix.
@@ -327,12 +365,22 @@ func (o *Oled96x96) DisableScroll() error {
 
 // sendCmd sends the passed data preluded by the command byte
 func (o *Oled96x96) sendCmd(buf ...byte) error {
-	data := append(cmdCmd, buf...)
-	return o.Conn.Write(data)
+	for _, b := range buf {
+		cmdCmdBuf[1] = b
+		if err := o.Conn.Write(cmdCmdBuf); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // sendData does what you expect it does and maybe even more
 func (o *Oled96x96) sendData(buf ...byte) error {
-	data := append(dataCmd, buf...)
-	return o.Conn.Write(data)
+	for _, b := range buf {
+		dataCmdBuf[1] = b
+		if err := o.Conn.Write(dataCmdBuf); err != nil {
+			return err
+		}
+	}
+	return nil
 }

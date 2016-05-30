@@ -18,10 +18,13 @@ func main() {
 		panic(err)
 	}
 	defer display.Close()
-	display.Clear()
 
-	display.Write("this is a test")
+	display.Write("Hello World!")
 
-	time.Sleep(15 * time.Second)
+	time.Sleep(5 * time.Second)
+	display.PositionCursor(0, 0)
+	display.Write("Ciao World!")
+	time.Sleep(2 * time.Second)
+
 	display.Off()
 }
