@@ -8,8 +8,8 @@ import (
 	"golang.org/x/exp/io/i2c/driver"
 )
 
-// Oled96x96 represents the Grove Oled 96x96 display.
-type Oled96x96 struct {
+// OLED96x96 represents the Grove Oled 96x96 display.
+type OLED96x96 struct {
 	Conn  driver.Conn
 	Font  Font
 	grayH byte
@@ -17,14 +17,14 @@ type Oled96x96 struct {
 }
 
 // New connects to the passed driver, connects and sets it up.
-func New(o driver.Opener) (*Oled96x96, error) {
+func New(o driver.Opener) (*OLED96x96, error) {
 	// TODO(mattetti): switch to `o.Open(Address)` when the exp/io API updated.
 	conn, err := o.Open()
 	if err != nil {
 		return nil, err
 	}
 
-	display := &Oled96x96{Conn: conn, Font: DefaultFont()}
+	display := &OLED96x96{Conn: conn, Font: DefaultFont()}
 
 	// Unlock OLED driver IC MCU interface from entering command. i.e: Accept commands
 	// Note: locking/unlocking could be exposed to developers later on if needed.
@@ -153,23 +153,23 @@ func New(o driver.Opener) (*Oled96x96, error) {
 }
 
 // Close takes care of cleaning things up.
-func (o *Oled96x96) Close() error {
+func (o *OLED96x96) Close() error {
 	return o.Conn.Close()
 }
 
 // Off turns the OLED panel display OFF
-func (o *Oled96x96) Off() error {
+func (o *OLED96x96) Off() error {
 	return o.sendCmd(displayOffCmd)
 }
 
 // On turns the OLED panel display ON
-func (o *Oled96x96) On() error {
+func (o *OLED96x96) On() error {
 	return o.sendCmd(displayOnCmd)
 }
 
 // Clear clears the whole screen. Should be used before starting a fresh start or after scroll deactivation.
 // This function also sets the cursor to top left corner.
-func (o *Oled96x96) Clear() error {
+func (o *OLED96x96) Clear() error {
 	// 48*96 = 4608
 	nullData := make([]byte, 4609)
 	nullData[0] = dataCmd
@@ -177,18 +177,18 @@ func (o *Oled96x96) Clear() error {
 }
 
 // Normal sets the display in mormal mode (colors aren't inversed)
-func (o *Oled96x96) Normal() error {
+func (o *OLED96x96) Normal() error {
 	return o.sendCmd(normalDisplayCmd)
 }
 
 // Inverse sets the display to inverse mode (colors are inversed)
-func (o *Oled96x96) Inverse() error {
+func (o *OLED96x96) Inverse() error {
 	return o.sendCmd(inverseDisplayCmd)
 }
 
 // ContrastLevel sets the contrast ratio of OLED display.
 // The level can be any number between 0 - 255.
-func (o *Oled96x96) ContrastLevel(level int) error {
+func (o *OLED96x96) ContrastLevel(level int) error {
 	if level < 0 || level > 255 {
 		return fmt.Errorf("invalid contrast level: %d, should be between 0-255", level)
 	}
@@ -196,7 +196,7 @@ func (o *Oled96x96) ContrastLevel(level int) error {
 }
 
 // HorizontalMode configures the display to horizontal addressing mode.
-func (o *Oled96x96) HorizontalMode() error {
+func (o *OLED96x96) HorizontalMode() error {
 	// horizontal mode
 	if err := o.sendCmd(0xA0, 0x42); err != nil {
 		return err
@@ -214,14 +214,14 @@ func (o *Oled96x96) HorizontalMode() error {
 
 // VerticalMode configures the display to vertical addressing mode.
 // The display must be set to vertical mode before printing text.
-func (o *Oled96x96) VerticalMode() error {
+func (o *OLED96x96) VerticalMode() error {
 	return o.sendCmd(0xA0, 0x46)
 }
 
 // PositionCursor sets the text's position (cursor) to Xth Text Row, Yth Text Column.
 // The 96x96 OLED is divided into 12 rows and 12 Columns of text.
 // These text row and columns should not be confused with the OLED's Row and Column.
-func (o *Oled96x96) PositionCursor(row, col int) error {
+func (o *OLED96x96) PositionCursor(row, col int) error {
 	// start at 8
 	startCol := 0x08 + byte(col*4)
 	if err := o.sendCmd(setColAddrCmd, startCol, 0x37); err != nil {
@@ -237,7 +237,7 @@ func (o *Oled96x96) PositionCursor(row, col int) error {
 }
 
 // Write prints the content of the passed text at the cursor's.
-func (o *Oled96x96) Write(txt string) error {
+func (o *OLED96x96) Write(txt string) error {
 	var c, bit1, bit2 byte
 	letterLen := len(o.Font)
 
@@ -284,14 +284,14 @@ func (o *Oled96x96) Write(txt string) error {
 
 // DrawBitmap displays a binary bitmap on the OLED matrix.
 // The data is provided through a slice holding bitmap.
-func (o *Oled96x96) DrawBitmap(bitmap []byte) error { return nil }
+func (o *OLED96x96) DrawBitmap(bitmap []byte) error { return nil }
 
 // HorizontalScrollProperties defines the scrolling behavior.
 // StartRow must be in the 0-127 range
 // EndRow must be in the 0-127 range and greater than StartRow
 // StartColumn must be between 0 and 63.
 // EndColumn must be in the 0 and 63 range and greater than StartColumn
-func (o *Oled96x96) HorizontalScrollProperties(
+func (o *OLED96x96) HorizontalScrollProperties(
 	direction ScrollDirection,
 	startRow int,
 	endRow int,
@@ -302,11 +302,11 @@ func (o *Oled96x96) HorizontalScrollProperties(
 }
 
 // EnableScroll enables and starts scrolling
-func (o *Oled96x96) EnableScroll() error {
+func (o *OLED96x96) EnableScroll() error {
 	return nil
 }
 
 // DisableScroll disables and stops scrolling
-func (o *Oled96x96) DisableScroll() error {
+func (o *OLED96x96) DisableScroll() error {
 	return nil
 }

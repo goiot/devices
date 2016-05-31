@@ -50,7 +50,7 @@ const (
 )
 
 // sendCmd sends the passed data preluded by the command byte
-func (o *Oled96x96) sendCmd(buf ...byte) error {
+func (o *OLED96x96) sendCmd(buf ...byte) error {
 	for _, b := range buf {
 		cmdCmdBuf[1] = b
 		if err := o.Conn.Write(cmdCmdBuf); err != nil {
@@ -61,7 +61,7 @@ func (o *Oled96x96) sendCmd(buf ...byte) error {
 }
 
 // sendData does what you expect it does and maybe even more
-func (o *Oled96x96) sendData(buf ...byte) error {
+func (o *OLED96x96) sendData(buf ...byte) error {
 	for _, b := range buf {
 		dataCmdBuf[1] = b
 		if err := o.Conn.Write(dataCmdBuf); err != nil {
