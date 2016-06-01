@@ -53,7 +53,7 @@ const (
 func (o *OLED96x96) sendCmd(buf ...byte) error {
 	for _, b := range buf {
 		cmdCmdBuf[1] = b
-		if err := o.Conn.Write(cmdCmdBuf); err != nil {
+		if err := o.Device.Write(cmdCmdBuf); err != nil {
 			return err
 		}
 	}
@@ -64,7 +64,7 @@ func (o *OLED96x96) sendCmd(buf ...byte) error {
 func (o *OLED96x96) sendData(buf ...byte) error {
 	for _, b := range buf {
 		dataCmdBuf[1] = b
-		if err := o.Conn.Write(dataCmdBuf); err != nil {
+		if err := o.Device.Write(dataCmdBuf); err != nil {
 			return err
 		}
 	}
