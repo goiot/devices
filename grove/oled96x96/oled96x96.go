@@ -5,26 +5,27 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/exp/io/i2c"
 	"golang.org/x/exp/io/i2c/driver"
 )
 
 // OLED96x96 represents the Grove Oled 96x96 display.
 type OLED96x96 struct {
-	Conn  driver.Conn
-	Font  Font
-	grayH byte
-	grayL byte
+	Device *i2c.Device
+	Font   Font
+	grayH  byte
+	grayL  byte
 }
 
 // New connects to the passed driver, connects and sets it up.
 func New(o driver.Opener) (*OLED96x96, error) {
 	// TODO(mattetti): switch to `o.Open(Address)` when the exp/io API updated.
-	conn, err := o.Open()
+	device, err := i2c.Open(o)
 	if err != nil {
 		return nil, err
 	}
 
-	display := &OLED96x96{Conn: conn, Font: DefaultFont()}
+	display := &OLED96x96{Device: device, Font: DefaultFont()}
 
 	// Unlock OLED driver IC MCU interface from entering command. i.e: Accept commands
 	// Note: locking/unlocking could be exposed to developers later on if needed.
@@ -154,7 +155,7 @@ func New(o driver.Opener) (*OLED96x96, error) {
 
 // Close takes care of cleaning things up.
 func (o *OLED96x96) Close() error {
-	return o.Conn.Close()
+	return o.Device.Close()
 }
 
 // Off turns the OLED panel display OFF
@@ -173,7 +174,7 @@ func (o *OLED96x96) Clear() error {
 	// 48*96 = 4608
 	nullData := make([]byte, 4609)
 	nullData[0] = dataCmd
-	return o.Conn.Write(nullData)
+	return o.Device.Write(nullData)
 }
 
 // Normal sets the display in mormal mode (colors aren't inversed)
