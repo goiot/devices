@@ -17,7 +17,7 @@ type OLED96x96 struct {
 	grayL  byte
 }
 
-// New connects to the passed driver, connects and sets it up.
+// New connects to the passed driver, connects and sets up.
 func New(o driver.Opener) (*OLED96x96, error) {
 	// TODO(mattetti): switch to `o.Open(Address)` when the exp/io API updated.
 	device, err := i2c.Open(o)
