@@ -15,6 +15,7 @@ Note that there are a LOT of IoT devices and while we would love to have libs fo
 ## Repo organization
 
 Device libraries are organized by manufacturers and should use names that easy to google or identify.
+Each device package contains a README file with references and details about the device (and usually a picture and links to datasheets). You will also find an examples folder with basic examples on how to use the library.
 
 * **Grove** Refers to [Seedstudio's Grove](http://www.seeedstudio.com/wiki/Grove_System), a very user friendly collection of modules
 using a common connector type. This is often easier to use that having to connect to a [breadboard](https://en.wikipedia.org/wiki/Breadboard).
