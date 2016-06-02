@@ -1,4 +1,4 @@
-# Golang libraries/drivers for specific IoT devices
+# Golang libraries/drivers for IoT devices
 
 This repo contains a suite of libraries for IoT devices that are meant to be as dependency free 
 and as idiomatic as possible.
