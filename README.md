@@ -1,5 +1,7 @@
 # Golang libraries/drivers for IoT devices
 
+[![Build Status](https://travis-ci.org/goiot/devices.svg?branch=master)](https://travis-ci.org/goiot/devices)
+
 This repo contains a suite of libraries for IoT devices that are meant to be as dependency free 
 and as idiomatic as possible.
 
