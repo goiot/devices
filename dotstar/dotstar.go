@@ -13,12 +13,17 @@ type RGBA struct {
 	A byte
 }
 
+// LEDs represent a strip of dotstar LEDs.
 type LEDs struct {
+	// Device is the underlying SPI bus that is used to
+	// communicate the LED strip.
 	Device *spi.Device
 
 	vals []RGBA
 }
 
+// New creates a new LED strip with n dotstar LEDs. An LED strip
+// must be closed if no longer in use.
 func New(o driver.Opener, n int) (*LEDs, error) {
 	dev, err := spi.Open(o)
 	if err != nil {
@@ -31,10 +36,12 @@ func New(o driver.Opener, n int) (*LEDs, error) {
 	}, nil
 }
 
+// SetRGBA sets the ith LED to the given RGBA value.
 func (d *LEDs) SetRGBA(i int, v RGBA) {
 	d.vals[i] = v
 }
 
+// Display displays the RGBA values set on the actual LED strip.
 func (d *LEDs) Display() error {
 	// TODO(jbd): dotstar allows other RGBA allignments, support those layouts.
 	n := len(d.vals)
@@ -60,6 +67,8 @@ func (d *LEDs) Display() error {
 	return d.Device.Tx(tx, nil)
 }
 
+// Close frees the underlying resources. It must be called once
+// the LED strip is no longer in use.
 func (d *LEDs) Close() error {
 	return d.Device.Close()
 }
