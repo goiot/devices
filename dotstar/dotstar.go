@@ -17,9 +17,6 @@ type Device struct {
 	Device *spi.Device
 
 	vals []RGBA
-
-	beginFrame []byte
-	endFrame   []byte
 }
 
 func New(o driver.Opener, n int) (*Device, error) {
@@ -27,15 +24,10 @@ func New(o driver.Opener, n int) (*Device, error) {
 	if err != nil {
 		return nil, err
 	}
-	endFrame := make([]byte, 4*n/2)
-	for i := 0; i < len(endFrame); i++ {
-		endFrame[i] = 0xff
-	}
+
 	return &Device{
-		Device:     dev,
-		vals:       make([]RGBA, n),
-		beginFrame: []byte{0x00, 0x00, 0x00, 0x00},
-		endFrame:   endFrame,
+		Device: dev,
+		vals:   make([]RGBA, n),
 	}, nil
 }
 
