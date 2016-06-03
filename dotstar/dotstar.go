@@ -6,10 +6,18 @@ import (
 	"golang.org/x/exp/io/spi/driver"
 )
 
+// RGBA represents the color of a dostar LED.
 type RGBA struct {
+	// R represents red.
 	R byte
+
+	// G represents green.
 	G byte
+
+	// B represents blue.
 	B byte
+
+	// A represents alpha value.
 	A byte
 }
 
