@@ -1,4 +1,4 @@
-# Golang libraries/drivers for IoT devices
+# Go libraries/drivers for IoT devices
 
 [![Build Status](https://travis-ci.org/goiot/devices.svg?branch=master)](https://travis-ci.org/goiot/devices)
 
