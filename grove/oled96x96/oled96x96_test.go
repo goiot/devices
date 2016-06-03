@@ -1,6 +1,9 @@
 package oled96x96_test
 
-import "github.com/goiot/drivers/i2c/grove/oled96x96"
+import (
+	"github.com/goiot/devices/grove/oled96x96"
+	"golang.org/x/exp/io/i2c"
+)
 
 func Example() {
 	bus := &i2c.Devfs{
