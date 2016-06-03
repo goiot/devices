@@ -13,29 +13,29 @@ type RGBA struct {
 	A byte
 }
 
-type Device struct {
+type LEDs struct {
 	Device *spi.Device
 
 	vals []RGBA
 }
 
-func New(o driver.Opener, n int) (*Device, error) {
+func New(o driver.Opener, n int) (*LEDs, error) {
 	dev, err := spi.Open(o)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Device{
+	return &LEDs{
 		Device: dev,
 		vals:   make([]RGBA, n),
 	}, nil
 }
 
-func (d *Device) SetRGBA(i int, v RGBA) {
+func (d *LEDs) SetRGBA(i int, v RGBA) {
 	d.vals[i] = v
 }
 
-func (d *Device) Display() error {
+func (d *LEDs) Display() error {
 	// TODO(jbd): dotstar allows other RGBA allignments, support those layouts.
 	n := len(d.vals)
 	tx := make([]byte, 1+(4*n)+(n/2))
@@ -60,6 +60,6 @@ func (d *Device) Display() error {
 	return d.Device.Tx(tx, nil)
 }
 
-func (d *Device) Close() error {
+func (d *LEDs) Close() error {
 	return d.Device.Close()
 }
