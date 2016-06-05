@@ -3,7 +3,7 @@
 [![GoDoc](http://godoc.org/github.com/goiot/devices?status.svg)](http://godoc.org/github.com/goiot/devices)
 [![Build Status](https://travis-ci.org/goiot/devices.svg?branch=master)](https://travis-ci.org/goiot/devices)
 
-This repo contains a suite of libraries for IoT devices that are meant to be as dependency free 
+This repo contains a suite of libraries for IoT devices/sensors/actuators. The suite is meant to be as dependency free 
 and as idiomatic as possible.
 
 If you are interested in helping, feel free to look at the open issues mentioning help needed.
