@@ -18,7 +18,7 @@ func main() {
 	}
 
 	for i := 0; i < n; i++ {
-		d.SetRGBA(i, dotstar.RGBA{255, 0, 0, 255}) // Red
+		d.SetRGBA(i, dotstar.RGBA{255, 0, 0, 16}) // Brightest red
 	}
 
 	if err := d.Display(); err != nil {
