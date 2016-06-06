@@ -23,8 +23,8 @@ type RGBA struct {
 
 // LEDs represent a strip of dotstar LEDs.
 type LEDs struct {
-	// Device is the underlying SPI bus that is used to
-	// communicate the LED strip.
+	// Device is the underlying SPI bus that is used to communicate the
+	// LED strip. Most users don't have to access this field.
 	Device *spi.Device
 
 	vals []RGBA
