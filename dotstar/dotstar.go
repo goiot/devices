@@ -30,9 +30,9 @@ type LEDs struct {
 	vals []RGBA
 }
 
-// New creates a new LED strip with n dotstar LEDs. An LED strip
+// Open opens a new LED strip with n dotstar LEDs. An LED strip
 // must be closed if no longer in use.
-func New(o driver.Opener, n int) (*LEDs, error) {
+func Open(o driver.Opener, n int) (*LEDs, error) {
 	dev, err := spi.Open(o)
 	if err != nil {
 		return nil, err
