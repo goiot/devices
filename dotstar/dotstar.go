@@ -44,7 +44,9 @@ func Open(o driver.Opener, n int) (*LEDs, error) {
 	}, nil
 }
 
-// SetRGBA sets the ith LED to the given RGBA value.
+// SetRGBA sets the ith LED's color to the given RGBA value.
+// A call to Display is required to transmit the new value
+// to the LED strip.
 func (d *LEDs) SetRGBA(i int, v RGBA) {
 	d.vals[i] = v
 }
