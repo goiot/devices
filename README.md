@@ -1,12 +1,10 @@
-# Golang libraries/drivers for IoT devices
+# Go libraries/drivers for IoT devices
 
+[![GoDoc](http://godoc.org/github.com/goiot/devices?status.svg)](http://godoc.org/github.com/goiot/devices)
 [![Build Status](https://travis-ci.org/goiot/devices.svg?branch=master)](https://travis-ci.org/goiot/devices)
 
-This repo contains a suite of libraries for IoT devices that are meant to be as dependency free 
+This repo contains a suite of libraries for IoT devices/sensors/actuators. The suite is meant to be as dependency free 
 and as idiomatic as possible.
-
-These libraries rely on Go's new exp/io interfaces and are designed so they can be used as is or via 
-existing Go IoT libraries/frameworks such as [GoBot](https://gobot.io/), [Embed](http://embd.kidoman.io/) and [hwio](https://github.com/mrmorphic/hwio).
 
 If you are interested in helping, feel free to look at the open issues mentioning help needed.
 If you have questions on how you implement some of the features, don't hesitate to ask. If you are trying to integrate

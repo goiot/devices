@@ -1,6 +1,6 @@
 #Grove - LCD RGB Backlight
 
-[![GoDoc](http://godoc.org/github.com/goiot/devices/grove/lcdgobacklight?status.png)](http://godoc.org/github.com/goiot/devices/grove/oled96x96)
+[![GoDoc](http://godoc.org/github.com/goiot/devices/grove/lcdgobacklight?status.svg)](http://godoc.org/github.com/goiot/devices/grove/lcdgobacklight)
 
 [Manufacturer info](http://www.seeedstudio.com/wiki/Grove_-_LCD_RGB_Backlight)
 
