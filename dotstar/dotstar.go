@@ -8,17 +8,10 @@ import (
 
 // RGBA represents the color of a dostar LED.
 type RGBA struct {
-	// R represents red.
-	R byte
-
-	// G represents green.
-	G byte
-
-	// B represents blue.
-	B byte
-
-	// A represents alpha value.
-	A byte
+	R byte // R represents the red intensity.
+	G byte // G represents the green intensity.
+	B byte // B represents the blue intensity.
+	A byte // A is the brightness of the LED. Must be between 0 and 15.
 }
 
 // LEDs represent a strip of dotstar LEDs.
@@ -63,7 +56,7 @@ func (d *LEDs) Display() error {
 
 	for i, c := range d.vals {
 		j := (i + 1) * 4
-		tx[j] = c.A
+		tx[j] = 240 & c.A
 		tx[j+1] = c.B
 		tx[j+2] = c.G
 		tx[j+3] = c.R
