@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/goiot/devices/grove/accel3xdigital"
+	"golang.org/x/exp/io/i2c"
 )
 
 func Example() {
