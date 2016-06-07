@@ -48,7 +48,7 @@ func (d *LEDs) SetRGBA(i int, v RGBA) {
 func (d *LEDs) Display() error {
 	// TODO(jbd): dotstar allows other RGBA allignments, support those layouts.
 	n := len(d.vals)
-	tx := make([]byte, 1+(4*n)+(n/2))
+	tx := make([]byte, 4*(n+1)+(n/2+1))
 	tx[0] = 0x00
 	tx[1] = 0x00
 	tx[2] = 0x00
@@ -63,7 +63,7 @@ func (d *LEDs) Display() error {
 	}
 
 	// end frame with at least n/2 0xff vals
-	for i := 4*n + 1; i < len(tx); i++ {
+	for i := (n + 1) * 4; i < len(tx); i++ {
 		tx[i] = 0xff
 	}
 
