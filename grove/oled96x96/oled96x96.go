@@ -17,8 +17,8 @@ type OLED96x96 struct {
 	grayL  byte
 }
 
-// New connects to the passed driver and sets things up.
-func New(o driver.Opener) (*OLED96x96, error) {
+// Open connects to the passed driver and sets things up.
+func Open(o driver.Opener) (*OLED96x96, error) {
 	device, err := i2c.Open(o)
 	if err != nil {
 		return nil, err

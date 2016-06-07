@@ -16,8 +16,8 @@ type LCDRGBBacklight struct {
 	RGB *i2c.Device
 }
 
-// New connects to the lcd and rgb openers, connects and sets up.
-func New(lcd driver.Opener, rgb driver.Opener) (*LCDRGBBacklight, error) {
+// Open connects to the lcd and rgb openers, connects and sets up.
+func Open(lcd driver.Opener, rgb driver.Opener) (*LCDRGBBacklight, error) {
 	lcdD, err := i2c.Open(lcd)
 	if err != nil {
 		return nil, fmt.Errorf("LCD driver failed to connect - %v", err)

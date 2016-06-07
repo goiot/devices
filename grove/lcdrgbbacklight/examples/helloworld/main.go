@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	display, err := lcdrgbbacklight.New(
+	display, err := lcdrgbbacklight.Open(
 		&i2c.Devfs{
 			Dev:  "/dev/i2c-1",
 			Addr: lcdrgbbacklight.LCDAddress,

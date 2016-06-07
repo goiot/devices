@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	accel, err := accel3xdigital.New(&i2c.Devfs{
+	accel, err := accel3xdigital.Open(&i2c.Devfs{
 		Dev:  "/dev/i2c-1",
 		Addr: accel3xdigital.Address,
 	})

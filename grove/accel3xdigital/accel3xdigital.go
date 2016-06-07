@@ -25,11 +25,11 @@ type Accel3xDigital struct {
 	TapEnabled bool
 }
 
-// New connects to the passed driver and sets things up.
+// Open connects to the passed driver and sets things up.
 // At this point the sensor will sample 32 times a second and will store its information in registries you can read from
 // by calling update.
 // Note that by default the tap detection is not on. You need to enable this feature manually.
-func New(o driver.Opener) (*Accel3xDigital, error) {
+func Open(o driver.Opener) (*Accel3xDigital, error) {
 	device, err := i2c.Open(o)
 	if err != nil {
 		return nil, err
@@ -162,8 +162,9 @@ func (a *Accel3xDigital) Update() error {
 }
 
 // Close puts the device on standby
-func (a *Accel3xDigital) Close() {
+func (a *Accel3xDigital) Close() error {
 	a.ChangeMode(StandBy)
+	return a.Device.Close()
 }
 
 // State contains the last read state of the device
