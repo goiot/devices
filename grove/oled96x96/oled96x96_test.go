@@ -12,7 +12,7 @@ func Example() {
 		Addr: oled96x96.Address,
 	}
 
-	display, err := oled96x96.New(bus)
+	display, err := oled96x96.Open(bus)
 	if err != nil {
 		panic(err)
 	}
