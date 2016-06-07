@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	display, err := oled96x96.New(&i2c.Devfs{
+	display, err := oled96x96.Open(&i2c.Devfs{
 		Dev:  "/dev/i2c-1",
 		Addr: oled96x96.Address,
 	})
