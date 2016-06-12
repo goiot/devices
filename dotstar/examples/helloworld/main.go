@@ -12,7 +12,7 @@ import (
 const n = 100
 
 func main() {
-	d, err := dotstar.Open(&spi.Devfs{Dev: "/dev/spi0.1", Mode: spi.Mode3}, n)
+	d, err := dotstar.Open(&spi.Devfs{Dev: "/dev/spidev0.1", Mode: spi.Mode3}, n)
 	if err != nil {
 		panic(err)
 	}
