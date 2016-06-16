@@ -31,6 +31,16 @@ func Open(o driver.Opener, n int) (*LEDs, error) {
 		return nil, err
 	}
 
+	if err := dev.SetMode(spi.Mode3); err != nil {
+		dev.Close()
+		return nil, err
+	}
+
+	if err := dev.SetBitsPerWord(8); err != nil {
+		dev.Close()
+		return nil, err
+	}
+
 	return &LEDs{
 		Device: dev,
 		vals:   make([]RGBA, n),
