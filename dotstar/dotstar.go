@@ -66,7 +66,7 @@ func (d *LEDs) Display() error {
 
 	for i, c := range d.vals {
 		j := (i + 1) * 4
-		tx[j] = 240 & c.A
+		tx[j] = 0xe0 + c.A
 		tx[j+1] = c.B
 		tx[j+2] = c.G
 		tx[j+3] = c.R
