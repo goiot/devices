@@ -150,6 +150,12 @@ func (o *OLED) DisableScroll() error {
 	panic("not implemented")
 }
 
+// Width returns the display width.
+func (o *OLED) Width() int { return o.w }
+
+// Height returns the display height.
+func (o *OLED) Height() int { return o.h }
+
 // Close closes the display.
 func (o *OLED) Close() error {
 	return o.dev.Close()
