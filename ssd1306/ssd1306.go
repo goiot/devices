@@ -85,6 +85,16 @@ func Open(o driver.Opener, width, height int) (*OLED, error) {
 	return &OLED{dev: dev}, nil
 }
 
+// On turns on the display if it is off.
+func (o *OLED) On() error {
+	panic("not implemented")
+}
+
+// Off turns off the display if it is on.
+func (o *OLED) Off() error {
+	panic("not implemented")
+}
+
 // DrawByte draws a byte on the OLED display.
 func (o *OLED) DrawByte(x, y, int, v byte) error {
 	panic("not implemented")
