@@ -95,6 +95,11 @@ func (o *OLED) Off() error {
 	panic("not implemented")
 }
 
+// Clear clears the entire display.
+func (o *OLED) Clear() error {
+	panic("not implemented")
+}
+
 // DrawByte draws a byte on the OLED display.
 func (o *OLED) DrawByte(x, y, int, v byte) error {
 	panic("not implemented")
