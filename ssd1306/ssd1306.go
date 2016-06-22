@@ -2,6 +2,7 @@
 package ssd1306
 
 import (
+	"fmt"
 	"image"
 
 	"golang.org/x/exp/io/i2c"
@@ -31,6 +32,10 @@ const (
 // OLED represents an SSD1306 OLED display.
 type OLED struct {
 	dev *i2c.Device
+
+	w   int    // width of the display
+	h   int    // height of the display
+	buf []byte // each pixel is represented by a bit
 }
 
 var initSeq = []byte{
@@ -82,32 +87,56 @@ func Open(o driver.Opener, width, height int) (*OLED, error) {
 		dev.Close()
 		return nil, err
 	}
-	return &OLED{dev: dev}, nil
+	buf := make([]byte, width*(height/8)+1)
+	buf[0] = 0x40 // start frame of pixel data
+	return &OLED{dev: dev, w: width, h: height, buf: buf}, nil
 }
 
 // On turns on the display if it is off.
 func (o *OLED) On() error {
-	panic("not implemented")
+	return o.dev.Write([]byte{ssd1306_DISPLAY_ON})
 }
 
 // Off turns off the display if it is on.
 func (o *OLED) Off() error {
-	panic("not implemented")
+	return o.dev.Write([]byte{ssd1306_DISPLAY_OFF})
 }
 
 // Clear clears the entire display.
 func (o *OLED) Clear() error {
-	panic("not implemented")
+	for i := 0; i < len(o.buf); i++ {
+		o.buf[0] = 0
+	}
+	return o.drawBuf(0, o.buf)
 }
 
-// DrawByte draws a byte on the OLED display.
-func (o *OLED) DrawByte(x, y, int, v byte) error {
-	panic("not implemented")
+// DrawPixel draws a pixel on the OLED display.
+// v can either be 0 or 1.
+func (o *OLED) DrawPixel(x, y int, v byte) error {
+	if x >= o.w || y >= o.h {
+		return fmt.Errorf("(x=%v, y=%v) is out of bounds on this %vx%v display", x, y, o.w, o.h)
+	}
+	if v > 1 {
+		return fmt.Errorf("value needs to be either 0 or 1; given %v", v)
+	}
+	i := x + (y/8)*o.w + 1
+	o.buf[i] = o.buf[i] | v<<uint((y%8))
+	return o.drawBuf(x, o.buf)
 }
 
 // DrawImage draws an image on the OLED display starting from x, y.
 func (o *OLED) DrawImage(x, y int, img image.Image) error {
 	panic("not implemented")
+}
+
+func (o *OLED) drawBuf(x int, buf []byte) error {
+	if err := o.dev.Write([]byte{0xa4}); err != nil { // the write mode
+		return err
+	}
+	if err := o.dev.Write([]byte{0x40 | byte(x)}); err != nil { //set the start line to x
+		return err
+	}
+	return o.dev.Write(buf)
 }
 
 // StartScroll starts scrolling in the horizontal direction starting from
