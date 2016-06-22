@@ -11,8 +11,7 @@ const (
 	ssd1306_LCDWIDTH  = 128
 	ssd1306_LCDHEIGHT = 64
 
-	// Protocol constants
-	ssd1306_I2C_ADDRESS = 0x3C
+	Address = 0x3C // Address is the I2C address of the device.
 
 	// On or off registers.
 	ssd1306_DISPLAY_ON  = 0xAF
