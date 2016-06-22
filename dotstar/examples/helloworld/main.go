@@ -21,7 +21,7 @@ func main() {
 		d.SetRGBA(i, dotstar.RGBA{255, 0, 0, 16}) // Brightest red
 	}
 
-	if err := d.Display(); err != nil {
+	if err := d.Draw(); err != nil {
 		panic(err)
 	}
 }
