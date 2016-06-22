@@ -4,6 +4,7 @@ package ssd1306
 import (
 	"image"
 
+	"golang.org/x/exp/io/i2c"
 	"golang.org/x/exp/io/i2c/driver"
 )
 
@@ -28,13 +29,60 @@ const (
 )
 
 // OLED represents an SSD1306 OLED display.
-type OLED struct{}
+type OLED struct {
+	dev *i2c.Device
+}
+
+var initSeq = []byte{
+	0xae,
+	0x00,
+	0x10,
+	0x40,
+	0x81,
+	0xcf,
+	0xa1,
+	0xc8,
+	0xa6,
+	0xa4,
+	0xa8,
+	0x3f,
+	0xd3,
+	0x00,
+	0xd5,
+	0x80,
+	0xd9,
+	0xf1,
+	0xda,
+	0x12,
+	0xdb,
+	0x40,
+	0x20,
+	0x00,
+	0x8d,
+	0x14,
+	0xa5,
+	0xaf,
+}
 
 // Open opens an SSD1306 OLED display. Once not in use, it needs to
 // be close by calling Close.
 // The default width is 128, height is 64 if zero values are given.
 func Open(o driver.Opener, width, height int) (*OLED, error) {
-	panic("not implemented")
+	if width == 0 {
+		width = ssd1306_LCDWIDTH
+	}
+	if height == 0 {
+		height = ssd1306_LCDHEIGHT
+	}
+	dev, err := i2c.Open(o)
+	if err != nil {
+		return nil, err
+	}
+	if err := dev.Write(initSeq); err != nil {
+		dev.Close()
+		return nil, err
+	}
+	return &OLED{dev: dev}, nil
 }
 
 // DrawByte draws a byte on the OLED display.
@@ -49,16 +97,16 @@ func (o *OLED) DrawImage(x, y int, img image.Image) error {
 
 // StartScroll starts scrolling in the horizontal direction starting from
 // startY column to endY column.
-func (o *OLED) StartScroll(startY, endY int) error {
+func (o *OLED) EnableScroll(startY, endY int) error {
 	panic("not implemented")
 }
 
 // StopStrolls stops the scrolling on the display.
-func (o *OLED) StopScroll() error {
+func (o *OLED) DisableScroll() error {
 	panic("not implemented")
 }
 
 // Close closes the display.
 func (o *OLED) Close() error {
-	panic("not implemented")
+	return o.dev.Close()
 }
