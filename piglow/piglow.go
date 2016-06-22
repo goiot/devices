@@ -20,9 +20,7 @@ func Open(o driver.Opener) (*PiGlow, error) {
 		return nil, err
 	}
 
-	return &PiGlow{
-		conn: conn,
-	}, nil
+	return &PiGlow{conn: conn}, nil
 }
 
 // Close frees the underlying resources. It must be called once
@@ -157,8 +155,8 @@ func (p *PiGlow) Red(level int) error {
 	return nil
 }
 
-// LED sets the led 1-18 to the level 0-255.
-func (p *PiGlow) LED(led, level int) error {
+// SetLEDBrightness sets the led 1-18 to the level 0-255.
+func (p *PiGlow) SetLEDBrightness(led, level int) error {
 	if err := p.conn.Write([]byte{byte(led), byte(level)}); err != nil {
 		return err
 	}
@@ -170,8 +168,8 @@ func (p *PiGlow) LED(led, level int) error {
 	return nil
 }
 
-// All sets all the LEDs to the level 0-255.
-func (p *PiGlow) All(level int) error {
+// SetBrightness sets all the LEDs to the level 0-255.
+func (p *PiGlow) SetBrightness(level int) error {
 	for i := 1; i <= 18; i++ {
 		if err := p.conn.Write([]byte{byte(i), byte(level)}); err != nil {
 			return err

@@ -10,28 +10,26 @@ import (
 )
 
 type opener struct {
-	Buffer *bytes.Buffer
+	buf *bytes.Buffer
 }
 
 func (o opener) Open() (driver.Conn, error) {
-	return &conn{
-		Buffer: o.Buffer,
-	}, nil
+	return &conn{buf: o.buf}, nil
 }
 
 type conn struct {
-	Buffer *bytes.Buffer
+	buf *bytes.Buffer
 }
 
 func (c conn) Tx(w, r []byte) error {
 	if w != nil {
-		if _, err := c.Buffer.Write(w); err != nil {
+		if _, err := c.buf.Write(w); err != nil {
 			return err
 		}
 	}
 
 	if r != nil {
-		if _, err := c.Buffer.Read(r); err != nil {
+		if _, err := c.buf.Read(r); err != nil {
 			return err
 		}
 	}
@@ -45,25 +43,24 @@ func (conn) Close() error {
 
 func openPiGlow(t *testing.T) (*piglow.PiGlow, *bytes.Buffer) {
 	o := opener{
-		Buffer: bytes.NewBuffer([]byte{}),
+		buf: bytes.NewBuffer([]byte{}),
 	}
 	device, err := piglow.Open(o)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return device, o.Buffer
+	return device, o.buf
 }
 
-func assert(t *testing.T, expected, actual interface{}) {
-	if !reflect.DeepEqual(expected, actual) {
-		t.Fatal("expected", expected, "to equal", actual)
+func assert(t *testing.T, want, got interface{}) {
+	if !reflect.DeepEqual(want, got) {
+		t.Fatalf("got = %v, want = %v", got, want)
 	}
 }
 
 func TestGreen(t *testing.T) {
-	device, buffer := openPiGlow(t)
-	buffer.Reset()
+	device, buf := openPiGlow(t)
 
 	if err := device.Green(1); err != nil {
 		t.Fatal(err)
@@ -76,12 +73,11 @@ func TestGreen(t *testing.T) {
 		0x16, 0xFF,
 	}
 
-	assert(t, expected, buffer.Bytes())
+	assert(t, expected, buf.Bytes())
 }
 
 func TestBlue(t *testing.T) {
-	device, buffer := openPiGlow(t)
-	buffer.Reset()
+	device, buf := openPiGlow(t)
 
 	if err := device.Blue(1); err != nil {
 		t.Fatal(err)
@@ -94,12 +90,11 @@ func TestBlue(t *testing.T) {
 		0x16, 0xFF,
 	}
 
-	assert(t, expected, buffer.Bytes())
+	assert(t, expected, buf.Bytes())
 }
 
 func TestYellow(t *testing.T) {
-	device, buffer := openPiGlow(t)
-	buffer.Reset()
+	device, buf := openPiGlow(t)
 
 	if err := device.Yellow(1); err != nil {
 		t.Fatal(err)
@@ -112,12 +107,11 @@ func TestYellow(t *testing.T) {
 		0x16, 0xFF,
 	}
 
-	assert(t, expected, buffer.Bytes())
+	assert(t, expected, buf.Bytes())
 }
 
 func TestOrange(t *testing.T) {
-	device, buffer := openPiGlow(t)
-	buffer.Reset()
+	device, buf := openPiGlow(t)
 
 	if err := device.Orange(1); err != nil {
 		t.Fatal(err)
@@ -130,12 +124,11 @@ func TestOrange(t *testing.T) {
 		0x16, 0xFF,
 	}
 
-	assert(t, expected, buffer.Bytes())
+	assert(t, expected, buf.Bytes())
 }
 
 func TestWhite(t *testing.T) {
-	device, buffer := openPiGlow(t)
-	buffer.Reset()
+	device, buf := openPiGlow(t)
 
 	if err := device.White(1); err != nil {
 		t.Fatal(err)
@@ -148,12 +141,11 @@ func TestWhite(t *testing.T) {
 		0x16, 0xFF,
 	}
 
-	assert(t, expected, buffer.Bytes())
+	assert(t, expected, buf.Bytes())
 }
 
 func TestRed(t *testing.T) {
-	device, buffer := openPiGlow(t)
-	buffer.Reset()
+	device, buf := openPiGlow(t)
 
 	if err := device.Red(1); err != nil {
 		t.Fatal(err)
@@ -166,14 +158,13 @@ func TestRed(t *testing.T) {
 		0x16, 0xFF,
 	}
 
-	assert(t, expected, buffer.Bytes())
+	assert(t, expected, buf.Bytes())
 }
 
-func TestAll(t *testing.T) {
-	device, buffer := openPiGlow(t)
-	buffer.Reset()
+func TestSetBrightness(t *testing.T) {
+	device, buf := openPiGlow(t)
 
-	if err := device.All(10); err != nil {
+	if err := device.SetBrightness(10); err != nil {
 		t.Fatal(err)
 	}
 
@@ -199,10 +190,10 @@ func TestAll(t *testing.T) {
 		0x16, 0xFF,
 	}
 
-	assert(t, expected, buffer.Bytes())
+	assert(t, expected, buf.Bytes())
 }
-func TestLED(t *testing.T) {
-	device, buffer := openPiGlow(t)
+func TestSetLEDBrightness(t *testing.T) {
+	device, buf := openPiGlow(t)
 
 	var states = []struct {
 		led      int
@@ -230,19 +221,18 @@ func TestLED(t *testing.T) {
 	}
 
 	for _, state := range states {
-		buffer.Reset()
+		buf.Reset()
 
-		if err := device.LED(state.led, state.level); err != nil {
+		if err := device.SetLEDBrightness(state.led, state.level); err != nil {
 			t.Fatal(err)
 		}
 
-		assert(t, state.expected, buffer.Bytes())
+		assert(t, state.expected, buf.Bytes())
 	}
 }
 
 func TestReset(t *testing.T) {
-	device, buffer := openPiGlow(t)
-	buffer.Reset()
+	device, buf := openPiGlow(t)
 
 	if err := device.Reset(); err != nil {
 		t.Fatal(err)
@@ -256,5 +246,5 @@ func TestReset(t *testing.T) {
 		0x15, 0xFF,
 	}
 
-	assert(t, expected, buffer.Bytes())
+	assert(t, expected, buf.Bytes())
 }
