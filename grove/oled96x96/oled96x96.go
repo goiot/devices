@@ -284,7 +284,9 @@ func (o *OLED96x96) Write(txt string) error {
 
 // DrawBitmap displays a binary bitmap on the OLED matrix.
 // The data is provided through a slice holding bitmap.
-func (o *OLED96x96) DrawBitmap(bitmap []byte) error { return nil }
+func (o *OLED96x96) DrawBitmap(bitmap []byte) error {
+	panic("not implemented")
+}
 
 // HorizontalScrollProperties defines the scrolling behavior.
 // StartRow must be in the 0-127 range
@@ -303,10 +305,10 @@ func (o *OLED96x96) HorizontalScrollProperties(
 
 // EnableScroll enables and starts scrolling
 func (o *OLED96x96) EnableScroll() error {
-	return nil
+	panic("not implemented")
 }
 
 // DisableScroll disables and stops scrolling
 func (o *OLED96x96) DisableScroll() error {
-	return nil
+	panic("not implemented")
 }
