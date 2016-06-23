@@ -48,14 +48,14 @@ func Open(o driver.Opener, n int) (*LEDs, error) {
 }
 
 // SetRGBA sets the ith LED's color to the given RGBA value.
-// A call to Display is required to transmit the new value
+// A call to Draw is required to transmit the new value
 // to the LED strip.
 func (d *LEDs) SetRGBA(i int, v RGBA) {
 	d.vals[i] = v
 }
 
-// Display displays the RGBA values set on the actual LED strip.
-func (d *LEDs) Display() error {
+// Draw displays the RGBA values set on the actual LED strip.
+func (d *LEDs) Draw() error {
 	// TODO(jbd): dotstar allows other RGBA allignments, support those layouts.
 	n := len(d.vals)
 	tx := make([]byte, 4*(n+1)+(n/2+1))

@@ -18,7 +18,7 @@ func Example() {
 	d.SetRGBA(3, dotstar.RGBA{255, 0, 0, 8})  // Half dim red
 	d.SetRGBA(4, dotstar.RGBA{0, 0, 255, 8})  // Half dim blue
 
-	if err := d.Display(); err != nil {
+	if err := d.Draw(); err != nil {
 		panic(err)
 	}
 }

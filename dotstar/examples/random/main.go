@@ -52,7 +52,7 @@ func main() {
 		for i := 0; i < n; i++ {
 			d.SetRGBA(i, dotstar.RGBA{1, 1, 1, 0})
 		}
-		d.Display()
+		d.Draw()
 		time.Sleep(400 * time.Millisecond)
 		d.Close()
 		os.Exit(0)
@@ -74,7 +74,7 @@ func randLedColors(d *dotstar.LEDs) {
 		})
 	}
 
-	if err := d.Display(); err != nil {
+	if err := d.Draw(); err != nil {
 		panic(err)
 	}
 }
