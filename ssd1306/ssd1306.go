@@ -52,7 +52,7 @@ var initSeq = []byte{
 	0xA0 | 0x1,
 	0xC8,
 	0xda, 0x12,
-	0x81, 0xcf, // set contast
+	0x81, 0xcf, // set contrast
 	0x9d, 0xf1,
 	0xdb, 0x40,
 	0xa4, 0xa6,
@@ -105,7 +105,7 @@ func (o *OLED) SetPixel(x, y int, v byte) error {
 		return fmt.Errorf("value needs to be either 0 or 1; given %v", v)
 	}
 	i := 1 + x + (y/8)*o.w
-	if v == byte(0) {
+	if v == 0 {
 		o.buf[i] &= ^(1 << uint((y & 7)))
 	} else {
 		o.buf[i] |= 1 << uint((y & 7))
@@ -114,8 +114,37 @@ func (o *OLED) SetPixel(x, y int, v byte) error {
 }
 
 // DrawImage draws an image on the OLED display starting from x, y.
-func (o *OLED) DrawImage(x int, img image.Image) error {
-	panic("not implemented")
+func (o *OLED) DrawImage(x, y int, img image.Image) error {
+	imgW := img.Bounds().Dx()
+	imgH := img.Bounds().Dy()
+
+	endX := x + imgW
+	endY := y + imgH
+
+	if endX >= o.w {
+		endX = o.w
+	}
+	if endY >= o.h {
+		endY = o.h
+	}
+
+	var imgI, imgY int
+	for i := x; i < endX; i++ {
+		imgY = 0
+		for j := y; j < endY; j++ {
+			r, g, b, _ := img.At(imgI, imgY).RGBA()
+			var v byte
+			if r+g+b > 0 {
+				v = 0x1
+			}
+			if err := o.SetPixel(i, j, v); err != nil {
+				return err
+			}
+			imgY++
+		}
+		imgI++
+	}
+	return o.Draw()
 }
 
 func (o *OLED) Draw() error {
