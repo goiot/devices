@@ -104,8 +104,12 @@ func (o *OLED) SetPixel(x, y int, v byte) error {
 	if v > 1 {
 		return fmt.Errorf("value needs to be either 0 or 1; given %v", v)
 	}
-	i := x + (y/8)*o.w + 1
-	o.buf[i] = o.buf[i] | v<<uint((y%8))
+	i := 1 + x + (y/8)*o.w
+	if v == byte(0) {
+		o.buf[i] &= ^(1 << uint((y & 7)))
+	} else {
+		o.buf[i] |= 1 << uint((y & 7))
+	}
 	return nil
 }
 
