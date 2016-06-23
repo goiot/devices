@@ -2,13 +2,62 @@
 package piglow
 
 import (
+	"fmt"
+
 	"golang.org/x/exp/io/i2c"
 	"golang.org/x/exp/io/i2c/driver"
 )
 
+const Address = 0x54 // Address is the I2C address of the device.
+
 // PiGlow represents a PiGlow device
 type PiGlow struct {
 	conn *i2c.Device
+}
+
+// Reset resets the internal registers
+func (p *PiGlow) Reset() error {
+	if err := p.conn.Write([]byte{0x17, 0xFF}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Shutdown sets the software shutdown mode of the PiGlow
+func (p *PiGlow) Shutdown() error {
+	return p.conn.Write([]byte{0x00, 0x00})
+}
+
+// Enable enables the PiGlow for normal operations
+func (p *PiGlow) Enable() error {
+	return p.conn.Write([]byte{0x00, 0x01})
+}
+
+// Setup enables normal operations, resets the internal registers, and enables
+// all LED control registers
+func (p *PiGlow) Setup() error {
+	if err := p.Reset(); err != nil {
+		return err
+	}
+
+	if err := p.Enable(); err != nil {
+		return err
+	}
+
+	if err := p.SetLEDControlRegister(1, 0xFF); err != nil {
+		return err
+	}
+
+	if err := p.SetLEDControlRegister(2, 0xFF); err != nil {
+		return err
+	}
+
+	if err := p.SetLEDControlRegister(3, 0xFF); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Open opens a new PiGlow. A PiGlow must be closed if no longer in use.
@@ -155,6 +204,38 @@ func (p *PiGlow) Red(level int) error {
 	return nil
 }
 
+// SetLEDControlRegister sets the control register 1-3 to the bitmask enables.
+//   bitmask definition:
+//   0 - LED disabled
+//   1 - LED enabled
+//   LED Control Register 1 - LED channel 1  to 6   bits 0-5
+//   LED Control Register 2 - LED channel 7  to 12  bits 0-5
+//   LED Control Register 3 - LED channel 13 to 18  bits 0-5
+func (p *PiGlow) SetLEDControlRegister(register, enables int) error {
+	var address byte
+
+	switch register {
+	case 1:
+		address = 0x13
+	case 2:
+		address = 0x14
+	case 3:
+		address = 0x15
+	default:
+		return fmt.Errorf("%d is an unknown register", register)
+	}
+
+	if err := p.conn.Write([]byte{address, byte(enables)}); err != nil {
+		return err
+	}
+
+	if err := p.conn.Write([]byte{0x16, 0xFF}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // SetLEDBrightness sets the led 1-18 to the level 0-255.
 func (p *PiGlow) SetLEDBrightness(led, level int) error {
 	if err := p.conn.Write([]byte{byte(led), byte(level)}); err != nil {
@@ -177,31 +258,6 @@ func (p *PiGlow) SetBrightness(level int) error {
 	}
 
 	if err := p.conn.Write([]byte{0x16, 0xFF}); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Reset resets the internal registers of the PiGlow.
-func (p *PiGlow) Reset() error {
-	if err := p.conn.Write([]byte{0x17, 0xFF}); err != nil {
-		return err
-	}
-
-	if err := p.conn.Write([]byte{0x00, 0x01}); err != nil {
-		return err
-	}
-
-	if err := p.conn.Write([]byte{0x13, 0xFF}); err != nil {
-		return err
-	}
-
-	if err := p.conn.Write([]byte{0x14, 0xFF}); err != nil {
-		return err
-	}
-
-	if err := p.conn.Write([]byte{0x15, 0xFF}); err != nil {
 		return err
 	}
 

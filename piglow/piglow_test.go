@@ -1,11 +1,11 @@
-package piglow_test
+package piglow
 
 import (
 	"bytes"
+	"errors"
 	"reflect"
 	"testing"
 
-	"github.com/goiot/devices/piglow"
 	"golang.org/x/exp/io/i2c/driver"
 )
 
@@ -41,11 +41,11 @@ func (conn) Close() error {
 	return nil
 }
 
-func openPiGlow(t *testing.T) (*piglow.PiGlow, *bytes.Buffer) {
+func openPiGlow(t *testing.T) (*PiGlow, *bytes.Buffer) {
 	o := opener{
 		buf: bytes.NewBuffer([]byte{}),
 	}
-	device, err := piglow.Open(o)
+	device, err := Open(o)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,6 +192,7 @@ func TestSetBrightness(t *testing.T) {
 
 	assert(t, expected, buf.Bytes())
 }
+
 func TestSetLEDBrightness(t *testing.T) {
 	device, buf := openPiGlow(t)
 
@@ -240,11 +241,80 @@ func TestReset(t *testing.T) {
 
 	expected := []byte{
 		0x17, 0xFF,
-		0x00, 0x01,
-		0x13, 0xFF,
-		0x14, 0xFF,
-		0x15, 0xFF,
 	}
 
 	assert(t, expected, buf.Bytes())
+}
+
+func TestShutdown(t *testing.T) {
+	device, buf := openPiGlow(t)
+
+	if err := device.Shutdown(); err != nil {
+		t.Fatal(err)
+	}
+
+	expected := []byte{
+		0x00, 0x00,
+	}
+
+	assert(t, expected, buf.Bytes())
+}
+
+func TestEnable(t *testing.T) {
+	device, buf := openPiGlow(t)
+
+	if err := device.Enable(); err != nil {
+		t.Fatal(err)
+	}
+
+	expected := []byte{
+		0x00, 0x01,
+	}
+
+	assert(t, expected, buf.Bytes())
+}
+
+func TestSetup(t *testing.T) {
+	device, buf := openPiGlow(t)
+
+	if err := device.Setup(); err != nil {
+		t.Fatal(err)
+	}
+
+	expected := []byte{
+		0x17, 0xFF,
+		0x00, 0x01,
+		0x13, 0xFF,
+		0x16, 0xFF,
+		0x14, 0xFF,
+		0x16, 0xFF,
+		0x15, 0xFF,
+		0x16, 0xFF,
+	}
+
+	assert(t, expected, buf.Bytes())
+}
+
+func TestSetLEDControlRegister(t *testing.T) {
+	device, buf := openPiGlow(t)
+
+	var states = []struct {
+		register int
+		enables  int
+		expected []byte
+		err      error
+	}{
+		{1, 0xFF, []byte{0x13, 0xFF, 0x16, 0xFF}, nil},
+		{2, 0xFF, []byte{0x14, 0xFF, 0x16, 0xFF}, nil},
+		{3, 0xFF, []byte{0x15, 0xFF, 0x16, 0xFF}, nil},
+		{0, 0xFF, []byte{}, errors.New("0 is an unknown register")},
+	}
+
+	for _, state := range states {
+		buf.Reset()
+
+		err := device.SetLEDControlRegister(state.register, state.enables)
+		assert(t, state.expected, buf.Bytes())
+		assert(t, state.err, err)
+	}
 }
