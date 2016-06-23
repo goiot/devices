@@ -151,7 +151,7 @@ func (o *OLED) Draw() error {
 	if err := o.dev.Write([]byte{
 		0xa4,     // write mode
 		0x40 | 0, // start line = 0
-		0x21, 0, ssd1306_LCDWIDTH - 1,
+		0x21, 0, ssd1306_LCDWIDTH,
 		0x22, 0, 7,
 	}); err != nil { // the write mode
 		return err
