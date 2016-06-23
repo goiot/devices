@@ -1,4 +1,4 @@
-// Package ssd1306 contains an SSD1306 OLED driver.
+// Package ssd1306 contains an SSD1306 OLED display driver.
 package ssd1306
 
 import (
