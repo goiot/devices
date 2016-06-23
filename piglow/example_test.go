@@ -8,9 +8,14 @@ import (
 )
 
 func Example() {
-	p, _ := piglow.Open(&i2c.Devfs{Dev: "/dev/i2c-1", Addr: piglow.Address})
+	p, err := piglow.Open(&i2c.Devfs{Dev: "/dev/i2c-1", Addr: piglow.Address})
+	if err != nil {
+		panic(err)
+	}
 
-	p.Setup()
+	if err := p.Setup(); err != nil {
+		panic(err)
+	}
 
 	brightness := 0
 	for i := 0; i < 10; i++ {
