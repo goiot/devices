@@ -52,12 +52,12 @@ var initSeq = []byte{
 	0xA0 | 0x1,
 	0xC8,
 	0xda, 0x12,
-	0x81, 0x9f, // set contast
+	0x81, 0xcf, // set contast
 	0x9d, 0xf1,
 	0xdb, 0x40,
 	0xa4, 0xa6,
 
-	0x2E,
+	0x2e,
 	0xaf,
 }
 
@@ -120,6 +120,8 @@ func (o *OLED) DrawImage(x int, img image.Image) error {
 
 func (o *OLED) Draw() error {
 	if err := o.dev.Write([]byte{
+		0xa4,     // write mode
+		0x40 | 0, // start line = 0
 		0x21, 0, ssd1306_LCDWIDTH - 1,
 		0x22, 0, 7,
 	}); err != nil { // the write mode
