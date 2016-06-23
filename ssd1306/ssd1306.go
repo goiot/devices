@@ -57,7 +57,7 @@ var initSeq = []byte{
 	0xdb, 0x40,
 	0xa4, 0xa6,
 
-	0x2E,
+	ssd1306_DEACTIVATE_SCROLL,
 	0xaf,
 }
 
