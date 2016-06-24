@@ -8,7 +8,7 @@ import (
 	"golang.org/x/exp/io/i2c/driver"
 )
 
-const Address = 0x54 // Address is the I2C address of the device.
+const addr = 0x54 // address is the I2C address of the device.
 
 // PiGlow represents a PiGlow device
 type PiGlow struct {
@@ -55,7 +55,7 @@ func (p *PiGlow) Setup() error {
 // If the PiGlow has not been powered down since last use, it will be opened
 // with it's last programmed state.
 func Open(o driver.Opener) (*PiGlow, error) {
-	conn, err := i2c.Open(o)
+	conn, err := i2c.Open(o, addr)
 	if err != nil {
 		return nil, err
 	}

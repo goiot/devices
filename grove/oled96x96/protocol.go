@@ -30,8 +30,8 @@ const (
 	// VerticalModeFlag   = 01
 	// HorizontalModeFlag = 02
 
-	// Address is the i2c address of the device
-	Address = 0x3c
+	// address is the i2c address of the device
+	address = 0x3c
 
 	cmdCmd           byte = 0x80
 	dataCmd          byte = 0x40

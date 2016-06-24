@@ -13,7 +13,7 @@ const (
 	ssd1306_LCDWIDTH  = 128
 	ssd1306_LCDHEIGHT = 64
 
-	Address = 0x3C // Address is the I2C address of the device.
+	addr = 0x3C // addr is the I2C address of the device.
 
 	// On or off registers.
 	ssd1306_DISPLAY_ON  = 0xAF
@@ -67,7 +67,7 @@ var initSeq = []byte{
 func Open(o driver.Opener) (*OLED, error) {
 	w := ssd1306_LCDWIDTH
 	h := ssd1306_LCDHEIGHT
-	dev, err := i2c.Open(o)
+	dev, err := i2c.Open(o, addr)
 	if err != nil {
 		return nil, err
 	}

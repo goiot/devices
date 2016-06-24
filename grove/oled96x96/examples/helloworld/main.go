@@ -9,8 +9,7 @@ import (
 
 func main() {
 	display, err := oled96x96.Open(&i2c.Devfs{
-		Dev:  "/dev/i2c-1",
-		Addr: oled96x96.Address,
+		Dev: "/dev/i2c-1",
 	})
 	if err != nil {
 		panic(err)

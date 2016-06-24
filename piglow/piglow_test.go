@@ -13,7 +13,7 @@ type opener struct {
 	buf *bytes.Buffer
 }
 
-func (o opener) Open() (driver.Conn, error) {
+func (o opener) Open(addr int, tenbit bool) (driver.Conn, error) {
 	return &conn{buf: o.buf}, nil
 }
 
