@@ -19,7 +19,7 @@ type OLED96x96 struct {
 
 // Open connects to the passed driver and sets things up.
 func Open(o driver.Opener) (*OLED96x96, error) {
-	device, err := i2c.Open(o)
+	device, err := i2c.Open(o, address)
 	if err != nil {
 		return nil, err
 	}

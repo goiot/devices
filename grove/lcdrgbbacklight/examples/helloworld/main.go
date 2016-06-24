@@ -9,14 +9,7 @@ import (
 
 func main() {
 	display, err := lcdrgbbacklight.Open(
-		&i2c.Devfs{
-			Dev:  "/dev/i2c-1",
-			Addr: lcdrgbbacklight.LCDAddress,
-		},
-		&i2c.Devfs{
-			Dev:  "/dev/i2c-1",
-			Addr: lcdrgbbacklight.RGBAddress,
-		},
+		&i2c.Devfs{Dev: "/dev/i2c-1"},
 	)
 	if err != nil {
 		panic(err)

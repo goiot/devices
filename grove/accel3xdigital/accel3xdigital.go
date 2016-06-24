@@ -30,13 +30,12 @@ type Accel3xDigital struct {
 // by calling update.
 // Note that by default the tap detection is not on. You need to enable this feature manually.
 func Open(o driver.Opener) (*Accel3xDigital, error) {
-	device, err := i2c.Open(o)
+	device, err := i2c.Open(o, addr)
 	if err != nil {
 		return nil, err
 	}
 
 	accel := &Accel3xDigital{Device: device, State: &State{}}
-
 	if err := accel.ChangeMode(StandBy); err != nil {
 		return accel, err
 	}

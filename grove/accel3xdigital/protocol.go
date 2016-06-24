@@ -26,8 +26,8 @@ const (
 )
 
 const (
-	// Address is the i2c address of this sensor
-	Address = 0x4c
+	// addr is the i2c address of this sensor
+	addr = 0x4c
 
 	accelX    = 0x00
 	accelY    = 0x01

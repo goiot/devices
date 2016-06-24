@@ -3,8 +3,8 @@ package lcdrgbbacklight
 import "errors"
 
 const (
-	LCDAddress = 0x3E
-	RGBAddress = 0x62
+	lcdAddr = 0x3E
+	rgbAddr = 0x62
 )
 
 const (

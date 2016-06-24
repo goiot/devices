@@ -8,8 +8,7 @@ import (
 func Example() {
 	bus := &i2c.Devfs{
 		// change the following value if you use another bus
-		Dev:  "/dev/i2c-1",
-		Addr: oled96x96.Address,
+		Dev: "/dev/i2c-1",
 	}
 
 	display, err := oled96x96.Open(bus)

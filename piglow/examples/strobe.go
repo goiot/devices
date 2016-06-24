@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	p, err := piglow.Open(&i2c.Devfs{Dev: "/dev/i2c-1", Addr: piglow.Address})
+	p, err := piglow.Open(&i2c.Devfs{Dev: "/dev/i2c-1"})
 	if err != nil {
 		panic(err)
 	}

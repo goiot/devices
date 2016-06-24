@@ -22,7 +22,7 @@ func main() {
 		panic(err)
 	}
 
-	d, err := ssd1306.Open(&i2c.Devfs{Dev: "/dev/i2c-1", Addr: ssd1306.Address})
+	d, err := ssd1306.Open(&i2c.Devfs{Dev: "/dev/i2c-1"})
 	if err != nil {
 		panic(err)
 	}
