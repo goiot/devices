@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/goiot/devices/grove/accel3xdigital"
@@ -23,34 +20,14 @@ func main() {
 		panic(err)
 	}
 
-	// channel to push to if we want to exit in a clean way
-	quitQ := make(chan bool)
+	defer accel.Close()
 
-	// catch signals and terminate the app
-	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
-
-	// monitor for signals in the background
-	go func() {
-		s := <-sigc
-		fmt.Println("\nreceived signal:", s)
-		quitQ <- true
-	}()
-
-	for {
-		select {
-		case <-quitQ:
-			accel.Close()
-			fmt.Println("Ciao! :)")
-			os.Exit(0)
-		case <-time.After(500 * time.Millisecond):
-			accel.Update()
-			fmt.Println(accel.State)
+	for i := 0; i < 20; i++ {
+		if err := accel.Update(); err != nil {
+			fmt.Println("Something went wrong updating the accelerometer value")
 		}
+		fmt.Println(accel.State)
+		time.Sleep(500 * time.Millisecond)
 	}
 
 }
