@@ -24,3 +24,7 @@ using a common connector type. This is often easier to use that having to connec
 
 Testing IoT devices is quite complicated, most of us use a [Raspberry Pi](https://www.raspberrypi.org/), connect the devices
 directly or via [shield](http://www.dexterindustries.com/grovepi/) and run the examples to test. Yes, it's far from perfect :(
+
+## More information / Advanced topics
+
+Checkout the [wiki](https://github.com/goiot/devices/wiki) for more info.
