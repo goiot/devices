@@ -23,7 +23,9 @@ func main() {
 	defer accel.Close()
 
 	for i := 0; i < 20; i++ {
-		accel.Update()
+		if err := accel.Update(); err != nil {
+			fmt.Println("Something went wrong updating the accelerometer value")
+		}
 		fmt.Println(accel.State)
 		time.Sleep(500 * time.Millisecond)
 	}
