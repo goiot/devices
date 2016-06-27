@@ -32,8 +32,10 @@ func main() {
 	if err := d.Clear(); err != nil {
 		panic(err)
 	}
-
-	if err := d.DrawImage(0, 0, m); err != nil {
+	if err := d.SetImage(0, 0, m); err != nil {
+		panic(err)
+	}
+	if err := d.Draw(); err != nil {
 		panic(err)
 	}
 }

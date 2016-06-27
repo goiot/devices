@@ -113,8 +113,9 @@ func (o *OLED) SetPixel(x, y int, v byte) error {
 	return nil
 }
 
-// DrawImage draws an image on the OLED display starting from x, y.
-func (o *OLED) DrawImage(x, y int, img image.Image) error {
+// SetImage draws an image on the display buffer starting from x, y.
+// A call to Draw is required to display it on the OLED display.
+func (o *OLED) SetImage(x, y int, img image.Image) error {
 	imgW := img.Bounds().Dx()
 	imgH := img.Bounds().Dy()
 
@@ -144,9 +145,11 @@ func (o *OLED) DrawImage(x, y int, img image.Image) error {
 		}
 		imgI++
 	}
-	return o.Draw()
+	return nil
 }
 
+// Draw draws the intermediate pixel buffer on the display.
+// See SetPixel and SetImage to mutate the buffer.
 func (o *OLED) Draw() error {
 	if err := o.dev.Write([]byte{
 		0xa4,     // write mode
