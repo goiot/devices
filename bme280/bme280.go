@@ -60,21 +60,24 @@ type State struct {
 	Humidity    float64
 }
 
-type calibrationData struct {
-	digT1 uint16
-	digT2 int16
-	digT3 int16
+type tempCalData struct {
+	DigT1 uint16
+	DigT2 int16
+	DigT3 int16
+}
+type pressureCalData struct {
+	DigP1 uint16
+	DigP2 int16
+	DigP3 int16
+	DigP4 int16
+	DigP5 int16
+	DigP6 int16
+	DigP7 int16
+	DigP8 int16
+	DigP9 int16
+}
 
-	digP1 uint16
-	digP2 int16
-	digP3 int16
-	digP4 int16
-	digP5 int16
-	digP6 int16
-	digP7 int16
-	digP8 int16
-	digP9 int16
-
+type humidCalData struct {
 	digH1 uint8
 	digH2 int16
 	digH3 uint8
@@ -89,7 +92,9 @@ type Bme280 struct {
 	Device *i2c.Device
 
 	State *State
-	cal   *calibrationData
+	tcal  *tempCalData
+	pcal  *pressureCalData
+	hcal  *humidCalData
 	tfine int32
 }
 
@@ -99,7 +104,13 @@ func Open(o driver.Opener) (*Bme280, error) {
 	if err != nil {
 		return nil, err
 	}
-	sensor := &Bme280{Device: device, State: &State{}, cal: &calibrationData{}}
+	sensor := &Bme280{
+		Device: device,
+		State:  &State{},
+		tcal:   &tempCalData{},
+		pcal:   &pressureCalData{},
+		hcal:   &humidCalData{},
+	}
 
 	if err = sensor.readChipID(); err != nil {
 		return nil, err
@@ -142,128 +153,89 @@ func (bme *Bme280) Update() error {
 
 }
 
-/*
 // Returns pressure in Pa as unsigned 32 bit integer in Q24.8 format (24 integer bits and 8 fractional bits).
 // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
-BME280_U32_t BME280_compensate_P_int64(BME280_S32_t adc_P)
-{
-BME280_S64_t var1, var2, p;
-var1 = ((BME280_S64_t)t_fine) – 128000;
-var2 = var1 * var1 * (BME280_S64_t)dig_P6;
-var2 = var2 + ((var1*(BME280_S64_t)dig_P5)<<17);
-var2 = var2 + (((BME280_S64_t)dig_P4)<<35);
-var1 = ((var1 * var1 * (BME280_S64_t)dig_P3)>>8) + ((var1 * (BME280_S64_t)dig_P2)<<12);
-var1 = (((((BME280_S64_t)1)<<47)+var1))*((BME280_S64_t)dig_P1)>>33;
-if (var1 == 0)
-{
-return 0; // avoid exception caused by division by zero
-}
-p = 1048576-adc_P;
-p = (((p<<31)-var2)*3125)/var1;
-var1 = (((BME280_S64_t)dig_P9) * (p>>13) * (p>>13)) >> 25;
-var2 = (((BME280_S64_t)dig_P8) * p) >> 19;
-p = ((p + var1 + var2) >> 8) + (((BME280_S64_t)dig_P7)<<4);
-return (BME280_U32_t)p;
-}
-*/
 func (bme *Bme280) readPressure() error {
-	buf := make([]byte, 3)
-	err := bme.Device.ReadReg(pressureReg, buf)
+	adcP, err := bme.read24(pressureReg)
 	if err != nil {
 		return err
 	}
 
-	adcP := int32(buf[0])<<16 | int32(buf[1])<<8 | int32(buf[2])
 	adcP = adcP >> 4 // only want 0xF9 (bit 7, 6, 5, 4)
 
+	cal := bme.pcal
+
 	var1 := int64(bme.tfine) - 128000
-	var2 := var1 * var1 * int64(bme.cal.digP6)
-	var2 = var2 + ((var1 * int64(bme.cal.digP5)) << 17)
-	var2 = var2 + ((int64(bme.cal.digP4)) << 35)
-	var1 = (var1 * var1 * (int64(bme.cal.digP3) >> 8)) + ((var1 * int64(bme.cal.digP2)) << 12)
-	var1 = ((int64(1) << 47) + var1) * (int64(bme.cal.digP1)) >> 33
+	var2 := var1 * var1 * int64(cal.DigP6)
+	var2 = var1 * var1 * int64(cal.DigP6)
+	var2 = var2 + ((var1 * int64(cal.DigP5)) << 17)
+	var2 = var2 + ((int64(cal.DigP4)) << 35)
+	var1 = ((var1 * var1 * int64(cal.DigP3)) >> 8) + ((var1 * int64(cal.DigP2)) << 12)
+	var1 = (((int64(1)) << 47) + var1) * (int64(cal.DigP1)) >> 33
+
 	if var1 == 0 {
-		fmt.Printf("press = %d\n", 0)
+		bme.State.Pressure = 0
 		return nil
 	}
+
 	p := int64(1048576) - int64(adcP)
-	p = ((int64(p<<31) - var2) * 3125) / var1
-	var1 = (int64(bme.cal.digP8) * (p >> 13) * (p >> 13)) >> 25
-	var2 = (int64(bme.cal.digP8) * p) >> 19
-	p = ((p + var1 + var2) >> 8) + (int64(bme.cal.digP7) << 4)
+	p = (((p << 31) - var2) * 3125) / var1
+	var1 = ((int64(cal.DigP9)) * (p >> 13) * (p >> 13)) >> 25
+	var2 = ((int64(cal.DigP8)) * p) >> 19
+	p = ((p + var1 + var2) >> 8) + ((int64(cal.DigP7)) << 4)
 
 	bme.State.Pressure = float64(p) / 256 / 100
 
 	return nil
 }
 
-/*
 // Returns temperature in DegC, resolution is 0.01 DegC. Output value of “5123” equals 51.23 DegC.
 // t_fine carries fine temperature as global value
-BME280_S32_t t_fine;
-BME280_S32_t BME280_compensate_T_int32(BME280_S32_t adc_T)
-{
-BME280_S32_t var1, var2, T;
-var1 = ((((adc_T>>3) – ((BME280_S32_t)dig_T1<<1))) * ((BME280_S32_t)dig_T2)) >> 11;
-var2 = (((((adc_T>>4) – ((BME280_S32_t)dig_T1)) * ((adc_T>>4) – ((BME280_S32_t)dig_T1))) >> 12) *
-((BME280_S32_t)dig_T3)) >> 14;
-t_fine = var1 + var2;
-T = (t_fine * 5 + 128) >> 8;
-return T;
-}
-*/
 func (bme *Bme280) readTemperature() error {
-	buf := make([]byte, 3)
-	err := bme.Device.ReadReg(tempReg, buf)
+	adcT, err := bme.read24(tempReg)
 	if err != nil {
 		return err
 	}
 
-	adcT := int32(buf[0])<<16 | int32(buf[1])<<8 | int32(buf[2])
 	adcT = adcT >> 4 // only want 0xFC (bit 7, 6, 5, 4)
+	cal := bme.tcal
 
-	var1 := ((((adcT) >> 3) - ((int32)(bme.cal.digT1) << 1)) * ((int32)(bme.cal.digT2))) >> 11
-	var2 := (((((adcT) >> 4) - ((int32)(bme.cal.digT1))) * ((adcT >> 4) - ((int32)(bme.cal.digT1))) >> 12) * ((int32)(bme.cal.digT3))) >> 14
+	var1 := (((adcT >> 3) - (int32(cal.DigT1) << 1)) * (int32(cal.DigT2))) >> 11
+	var2 := (((((adcT >> 4) - (int32(cal.DigT1))) * ((adcT >> 4) - (int32(cal.DigT1)))) >> 12) * (int32(cal.DigT3))) >> 14
+
 	bme.tfine = var1 + var2
 	t := (bme.tfine*5 + 128) >> 8
 
-	bme.State.Temperature = float64(t) * 0.01
+	bme.State.Temperature = float64(t) / 100
 
 	return nil
 }
 
-/*
 // Returns humidity in %RH as unsigned 32 bit integer in Q22.10 format (22 integer and 10 fractional bits).
 // Output value of “47445” represents 47445/1024 = 46.333 %RH
-BME280_U32_t bme280_compensate_H_int32(BME280_S32_t adc_H)
-{
-BME280_S32_t v_x1_u32r;
-v_x1_u32r = (t_fine – ((BME280_S32_t)76800));
-v_x1_u32r = (((((adc_H << 14) – (((BME280_S32_t)dig_H4) << 20) – (((BME280_S32_t)dig_H5) * v_x1_u32r)) +
-((BME280_S32_t)16384)) >> 15) * (((((((v_x1_u32r * ((BME280_S32_t)dig_H6)) >> 10) * (((v_x1_u32r *
-((BME280_S32_t)dig_H3)) >> 11) + ((BME280_S32_t)32768))) >> 10) + ((BME280_S32_t)2097152)) *
-((BME280_S32_t)dig_H2) + 8192) >> 14));
-v_x1_u32r = (v_x1_u32r – (((((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) * ((BME280_S32_t)dig_H1)) >> 4));
-v_x1_u32r = (v_x1_u32r < 0 ? 0 : v_x1_u32r);
-v_x1_u32r = (v_x1_u32r > 419430400 ? 419430400 : v_x1_u32r);
-return (BME280_U32_t)(v_x1_u32r>>12);
-}
-*/
 func (bme *Bme280) readHumidity() error {
-	buf := make([]byte, 2)
-	err := bme.Device.ReadReg(humidReg, buf)
+
+	adcH, err := bme.read16(humidReg)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("humid = % x\n", buf)
 
-	adcH := int32(buf[0])<<8 | int32(buf[1])
-	fmt.Printf("humid = %d\n", adcH)
+	fmt.Printf("hum = %d\n", adcH)
+
+	cal := bme.hcal
 
 	vx1u32r := (bme.tfine - (int32(76800)))
-	vx1u32r = ((((adcH << 14) - (int32(bme.cal.digH4) << 20) - (int32(bme.cal.digH5) * vx1u32r)) + int32(16384)) >> 15) *
-		(((((((vx1u32r * int32(bme.cal.digH6)) >> 10) * ((vx1u32r * (int32(bme.cal.digH3) >> 11)) + (int32(32768)))) >> 10) + (int32(2097152))) * (int32(bme.cal.digH2) + 8192)) >> 14)
-	vx1u32r = (vx1u32r - (((((vx1u32r >> 15) * (vx1u32r >> 15)) >> 7) * (int32(bme.cal.digH1))) >> 4))
+
+	fmt.Printf("hum = %d\n", vx1u32r)
+
+	vx1u32r = (((((adcH << 14) - ((int32(cal.digH4)) << 20) - ((int32(cal.digH5)) * vx1u32r)) +
+		(int32(16384))) >> 15) * (((((((vx1u32r*(int32(cal.digH6)))>>10)*(((vx1u32r*
+		(int32(cal.digH3)))>>11)+(int32(32768))))>>10)+(int32(2097152)))*
+		(int32(cal.digH2)) + 8192) >> 14))
+
+	vx1u32r = (vx1u32r - (((((vx1u32r >> 15) * (vx1u32r >> 15)) >> 7) * (int32(cal.digH1))) >> 4))
+
+	fmt.Printf("hum = %d\n", vx1u32r)
 
 	if vx1u32r < 0 {
 		vx1u32r = 0
@@ -295,6 +267,33 @@ func (bme *Bme280) readChipID() error {
 	return nil
 }
 
+func (bme *Bme280) read24(reg byte) (int32, error) {
+	var v int32
+	buf := make([]byte, 3)
+	err := bme.Device.ReadReg(reg, buf)
+	if err != nil {
+		return v, err
+	}
+
+	v = int32(buf[0])<<16 | int32(buf[1])<<8 | int32(buf[2])
+
+	return v, nil
+}
+
+func (bme *Bme280) read16(reg byte) (int32, error) {
+	var v int32
+	buf := make([]byte, 2)
+	err := bme.Device.ReadReg(reg, buf)
+	if err != nil {
+		return v, err
+	}
+
+	v = int32(buf[0])<<8 | int32(buf[1])
+
+	return v, nil
+
+}
+
 func (bme *Bme280) readCoefficients() error {
 	// 0x88…0xA1
 	buf := make([]byte, 26)
@@ -307,18 +306,13 @@ func (bme *Bme280) readCoefficients() error {
 
 	p := bytes.NewBuffer(buf)
 
-	binary.Read(p, binary.LittleEndian, &bme.cal.digT1)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digT2)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digT3)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digP1)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digP2)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digP3)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digP4)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digP5)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digP6)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digP7)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digP8)
-	binary.Read(p, binary.LittleEndian, &bme.cal.digP9)
+	if err := binary.Read(p, binary.LittleEndian, bme.tcal); err != nil {
+		return err
+	}
+
+	if err := binary.Read(p, binary.LittleEndian, bme.pcal); err != nil {
+		return err
+	}
 
 	buf = make([]byte, 1)
 	err = bme.Device.ReadReg(digH1Reg, buf)
@@ -326,21 +320,44 @@ func (bme *Bme280) readCoefficients() error {
 		return err
 	}
 
-	bme.cal.digH1 = buf[0]
+	bme.hcal.digH1 = buf[0]
 
-	buf = make([]byte, 8)
-	err = bme.Device.ReadReg(0xE1, buf)
+	buf = make([]byte, 3)
+	err = bme.Device.ReadReg(digH2Reg, buf)
 	if err != nil {
 		return err
 	}
 
-	bme.cal.digH2 = int16(buf[0])<<8 | int16(buf[1])
-	bme.cal.digH3 = buf[2]
-	bme.cal.digH4 = int16(buf[3])<<4 | (int16(buf[4]) & 0xF)
-	bme.cal.digH5 = int16(buf[6])<<4 | int16(buf[5])>>4
-	bme.cal.digH6 = int8(buf[7])
+	p = bytes.NewBuffer(buf)
+	if err := binary.Read(p, binary.LittleEndian, &bme.hcal.digH2); err != nil {
+		return err
+	}
+	if err := binary.Read(p, binary.LittleEndian, &bme.hcal.digH3); err != nil {
+		return err
+	}
 
-	spew.Dump(bme.cal)
+	buf = make([]byte, 2)
+	err = bme.Device.ReadReg(digH4Reg, buf)
+	if err != nil {
+		return err
+	}
+	bme.hcal.digH4 = 318 //int16(buf[1])<<4 | int16(buf[0])
+
+	buf = make([]byte, 2)
+	err = bme.Device.ReadReg(digH5Reg, buf)
+	if err != nil {
+		return err
+	}
+	bme.hcal.digH5 = int16(buf[1]) | int16(buf[0])>>4
+
+	buf = make([]byte, 1)
+	err = bme.Device.ReadReg(digH6Reg, buf)
+	if err != nil {
+		return err
+	}
+	bme.hcal.digH6 = int8(buf[0])
+
+	spew.Dump(bme.hcal)
 
 	return nil
 }
