@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/goiot/devices/grove/accel3xdigital"
+	"github.com/goiot/devices/accel3xdigital"
 	"golang.org/x/exp/io/i2c"
 )
 

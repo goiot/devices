@@ -1,7 +1,7 @@
 package oled96x96_test
 
 import (
-	"github.com/goiot/devices/grove/oled96x96"
+	"github.com/goiot/devices/oled96x96"
 	"golang.org/x/exp/io/i2c"
 )
 

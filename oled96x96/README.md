@@ -1,6 +1,6 @@
 #Grove - OLED 96×96
 
-[![GoDoc](http://godoc.org/github.com/goiot/devices/grove/oled96x96?status.svg)](http://godoc.org/github.com/goiot/devices/grove/oled96x96)
+[![GoDoc](http://godoc.org/github.com/goiot/devices/oled96x96?status.svg)](http://godoc.org/github.com/goiot/devices/oled96x96)
 
 [Manufacturer info](http://www.seeedstudio.com/wiki/Grove_-_OLED_Display_1.12%22)
 
