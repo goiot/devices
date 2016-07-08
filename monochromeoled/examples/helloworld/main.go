@@ -6,7 +6,7 @@ import (
 
 	_ "image/png"
 
-	"github.com/goiot/devices/ssd1306"
+	"github.com/goiot/devices/monochromeoled"
 	"golang.org/x/exp/io/i2c"
 )
 
@@ -22,7 +22,7 @@ func main() {
 		panic(err)
 	}
 
-	d, err := ssd1306.Open(&i2c.Devfs{Dev: "/dev/i2c-1"})
+	d, err := monochromeoled.Open(&i2c.Devfs{Dev: "/dev/i2c-1"})
 	if err != nil {
 		panic(err)
 	}

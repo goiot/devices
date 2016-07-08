@@ -23,7 +23,7 @@ Note that there are a LOT of IoT devices and while we would love to have libs fo
 ### [Adafruit](https://www.adafruit.com/)
 
 * [DotStar RGB LED (APA102)](https://github.com/goiot/devices/tree/master/dotstar)
-* [Monochrome 0.96" 128x64 OLED graphic display (SSD1306)](https://github.com/goiot/devices/tree/master/ssd1306)
+* [Monochrome 0.96" 128x64 OLED graphic display (SSD1306)](https://github.com/goiot/devices/tree/master/monochromeoled)
 
 ### [Pimoroni](https://shop.pimoroni.com/)
 
@@ -37,7 +37,7 @@ If you have device that doesn't have a driver listed above, look at the main com
 it it matches one of the ones mentioned below.
 
 * [APA102 LED strip](https://github.com/goiot/devices/tree/master/dotstar)
-* [SSD1306 OLED](https://github.com/goiot/devices/tree/master/ssd1306)
+* [SSD1306 OLED](https://github.com/goiot/devices/tree/master/monochromeoled)
 
 ## Repo organization
 
