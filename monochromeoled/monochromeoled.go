@@ -1,5 +1,6 @@
-// Package ssd1306 contains an SSD1306 OLED display driver.
-package ssd1306
+// Package monochromeoled contains an Adafruit Monochrome OLED (SSD1306)
+// display driver.
+package monochromeoled
 
 import (
 	"fmt"
