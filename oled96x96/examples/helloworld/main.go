@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/goiot/devices/grove/oled96x96"
+	"github.com/goiot/devices/oled96x96"
 	"golang.org/x/exp/io/i2c"
 )
 

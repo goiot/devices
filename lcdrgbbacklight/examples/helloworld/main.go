@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/goiot/devices/grove/lcdrgbbacklight"
+	"github.com/goiot/devices/lcdrgbbacklight"
 	"golang.org/x/exp/io/i2c"
 )
 

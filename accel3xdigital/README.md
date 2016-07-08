@@ -1,6 +1,6 @@
 #Grove - 3-Axis Digital Accelerometer(±1.5g)
 
-[![GoDoc](http://godoc.org/github.com/goiot/devices/grove/accel3xdigital?status.svg)](http://godoc.org/github.com/goiot/devices/grove/accel3xdigital)
+[![GoDoc](http://godoc.org/github.com/goiot/devices/accel3xdigital?status.svg)](http://godoc.org/github.com/goiot/devices/accel3xdigital)
 
 [Manufacturer info](http://www.seeedstudio.com/wiki/Grove_-_3-Axis_Digital_Accelerometer(%C2%B11.5g))
 
