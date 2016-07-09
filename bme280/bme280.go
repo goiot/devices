@@ -1,13 +1,14 @@
-// Package bme280 implements a driver for the bosch bme280 tempreture, humidity
+// Package bme280 implements a driver for the bosch bme280 temperature, humidity
 // and barometric pressure sensor.
+//
+// Datasheet https://cdn-shop.adafruit.com/datasheets/BST-BME280_DS001-10.pdf
 package bme280
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-
-	"github.com/davecgh/go-spew/spew"
+	"time"
 
 	"golang.org/x/exp/io/i2c"
 	"golang.org/x/exp/io/i2c/driver"
@@ -51,6 +52,40 @@ const (
 	chipID = 0x60
 
 	seaLevelhPa = 1013.25
+
+	// Controls oversampling of data
+	pressureShift = 5
+	tempShift     = 2
+
+	// Oversample0 oversample 0 times
+	Oversample0 = 0
+	// Oversample1 oversample 1 times
+	Oversample1 = 1
+	// Oversample2 oversample 2 times
+	Oversample2 = 2
+	// Oversample4 oversample 4 times
+	Oversample4 = 3
+	// Oversample8 oversample 8 times
+	Oversample8 = 4
+	// Oversample16 oversample 16 times
+	Oversample16 = 5
+
+	// Controls the sensor mode of the device
+	modeSleep  = 0
+	modeForced = 2
+	modeNormal = 3
+
+	setupMaxPressure  = 10
+	setupMaxHumidity  = 10
+	initMax           = 20
+	measurePerOsrsMax = 37
+)
+
+var (
+	oversamplePressure = shiftFunc(pressureShift)
+	oversampleTemp     = shiftFunc(tempShift)
+	oversampleHumidity = shiftFunc(0)
+	mode               = shiftFunc(0)
 )
 
 // State state as read from the sensor during update
@@ -120,19 +155,27 @@ func Open(o driver.Opener) (*Bme280, error) {
 		return nil, err
 	}
 
-	if err = sensor.Device.WriteReg(controlRegHumid, []byte{0x05}); err != nil {
-		return nil, err
-	}
-
-	if err = sensor.Device.WriteReg(controlReg, []byte{0xB7}); err != nil {
-		return nil, err
-	}
-
 	return sensor, nil
 }
 
 // Update read from the sensor and update the state
-func (bme *Bme280) Update() error {
+func (bme *Bme280) Update(oversample uint8) error {
+
+	if err := bme.Device.WriteReg(controlRegHumid,
+		[]byte{oversampleHumidity(oversample)}); err != nil {
+		return err
+	}
+
+	controlSettings := mode(modeNormal) | oversampleTemp(oversample) | oversamplePressure(oversample)
+
+	if err := bme.Device.WriteReg(controlReg,
+		[]byte{controlSettings}); err != nil {
+		return err
+	}
+
+	sleeptime := measureSleeptime(oversample)
+
+	time.Sleep(sleeptime)
 
 	err := bme.readTemperature()
 	if err != nil {
@@ -164,6 +207,8 @@ func (bme *Bme280) readPressure() error {
 	adcP = adcP >> 4 // only want 0xF9 (bit 7, 6, 5, 4)
 
 	cal := bme.pcal
+
+	// ported from 4.2.3 Compensation formulas section of datasheet
 
 	var1 := int64(bme.tfine) - 128000
 	var2 := var1 * var1 * int64(cal.DigP6)
@@ -200,6 +245,8 @@ func (bme *Bme280) readTemperature() error {
 	adcT = adcT >> 4 // only want 0xFC (bit 7, 6, 5, 4)
 	cal := bme.tcal
 
+	// ported from 4.2.3 Compensation formulas section of datasheet
+
 	var1 := (((adcT >> 3) - (int32(cal.DigT1) << 1)) * (int32(cal.DigT2))) >> 11
 	var2 := (((((adcT >> 4) - (int32(cal.DigT1))) * ((adcT >> 4) - (int32(cal.DigT1)))) >> 12) * (int32(cal.DigT3))) >> 14
 
@@ -220,13 +267,11 @@ func (bme *Bme280) readHumidity() error {
 		return err
 	}
 
-	fmt.Printf("hum = %d\n", adcH)
-
 	cal := bme.hcal
 
-	vx1u32r := (bme.tfine - (int32(76800)))
+	// ported from 4.2.3 Compensation formulas section of datasheet
 
-	fmt.Printf("hum = %d\n", vx1u32r)
+	vx1u32r := (bme.tfine - (int32(76800)))
 
 	vx1u32r = (((((adcH << 14) - ((int32(cal.digH4)) << 20) - ((int32(cal.digH5)) * vx1u32r)) +
 		(int32(16384))) >> 15) * (((((((vx1u32r*(int32(cal.digH6)))>>10)*(((vx1u32r*
@@ -234,8 +279,6 @@ func (bme *Bme280) readHumidity() error {
 		(int32(cal.digH2)) + 8192) >> 14))
 
 	vx1u32r = (vx1u32r - (((((vx1u32r >> 15) * (vx1u32r >> 15)) >> 7) * (int32(cal.digH1))) >> 4))
-
-	fmt.Printf("hum = %d\n", vx1u32r)
 
 	if vx1u32r < 0 {
 		vx1u32r = 0
@@ -245,7 +288,7 @@ func (bme *Bme280) readHumidity() error {
 		vx1u32r = 419430400
 	}
 
-	bme.State.Humidity = float64(vx1u32r) / 1024
+	bme.State.Humidity = float64(vx1u32r>>12) / 1024
 
 	return nil
 
@@ -322,42 +365,43 @@ func (bme *Bme280) readCoefficients() error {
 
 	bme.hcal.digH1 = buf[0]
 
-	buf = make([]byte, 3)
+	buf = make([]byte, 7)
 	err = bme.Device.ReadReg(digH2Reg, buf)
 	if err != nil {
 		return err
 	}
 
-	p = bytes.NewBuffer(buf)
-	if err := binary.Read(p, binary.LittleEndian, &bme.hcal.digH2); err != nil {
-		return err
-	}
-	if err := binary.Read(p, binary.LittleEndian, &bme.hcal.digH3); err != nil {
-		return err
-	}
-
-	buf = make([]byte, 2)
-	err = bme.Device.ReadReg(digH4Reg, buf)
-	if err != nil {
-		return err
-	}
-	bme.hcal.digH4 = 318 //int16(buf[1])<<4 | int16(buf[0])
-
-	buf = make([]byte, 2)
-	err = bme.Device.ReadReg(digH5Reg, buf)
-	if err != nil {
-		return err
-	}
-	bme.hcal.digH5 = int16(buf[1]) | int16(buf[0])>>4
-
-	buf = make([]byte, 1)
-	err = bme.Device.ReadReg(digH6Reg, buf)
-	if err != nil {
-		return err
-	}
-	bme.hcal.digH6 = int8(buf[0])
-
-	spew.Dump(bme.hcal)
+	bme.hcal.digH2 = int16(buf[0]) | int16(buf[1])<<8
+	bme.hcal.digH3 = buf[2]
+	bme.hcal.digH4 = int16(buf[3])<<4 | (int16(buf[4]<<4))>>4
+	bme.hcal.digH5 = int16(buf[4])>>4 | int16(buf[5])<<4
+	bme.hcal.digH6 = int8(buf[6])
 
 	return nil
+}
+
+func measureSleeptime(oversample uint8) time.Duration {
+	maxPressure := uint16(0)
+	maxHumidity := uint16(0)
+
+	if oversample > 0 {
+		maxPressure = setupMaxPressure
+		maxHumidity = setupMaxHumidity
+	}
+
+	v := uint16(((1 << oversample) >> 1) + ((1 << oversample) >> 1) + ((1 << oversample) >> 1))
+
+	sleepms := (initMax + measurePerOsrsMax*v + (maxPressure) + (maxHumidity) + 15) / 16
+	fmt.Printf("sleepms = %d\n", sleepms)
+	return time.Duration(sleepms) * time.Millisecond
+}
+
+func shiftFunc(shift uint8) func(v uint8) uint8 {
+	return func(v uint8) uint8 {
+		// fmt.Printf("%d %b\n", v, v)
+		if v < 6 {
+			return v << shift
+		}
+		return 1
+	}
 }

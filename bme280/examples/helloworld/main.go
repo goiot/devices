@@ -13,7 +13,7 @@ func main() {
 		panic(err)
 	}
 
-	err = sensor.Update()
+	err = sensor.Update(bme280.Oversample16)
 	if err != nil {
 		panic(err)
 	}
