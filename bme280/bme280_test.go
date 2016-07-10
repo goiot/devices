@@ -2,6 +2,7 @@ package bme280
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -35,5 +36,5 @@ func TestConfig(t *testing.T) {
 }
 
 func TestMeasureSleeptime(t *testing.T) {
-	assert.Equal(t, measureSleeptime(Oversample1), 11.5)
+	assert.Equal(t, measureSleeptime(Oversample2), 17*time.Millisecond)
 }
