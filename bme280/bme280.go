@@ -1,7 +1,5 @@
 // Package bme280 implements a driver for the bosch bme280 temperature, humidity
 // and barometric pressure sensor.
-//
-// Datasheet https://cdn-shop.adafruit.com/datasheets/BST-BME280_DS001-10.pdf
 package bme280
 
 import (
@@ -365,6 +363,7 @@ func (bme *Bme280) readCoefficients() error {
 
 	bme.hcal.digH1 = buf[0]
 
+	// 0xE1…0xE7
 	buf = make([]byte, 7)
 	err = bme.Device.ReadReg(digH2Reg, buf)
 	if err != nil {
@@ -381,6 +380,9 @@ func (bme *Bme280) readCoefficients() error {
 }
 
 func measureSleeptime(oversample uint8) time.Duration {
+
+	// this code was ported from https://github.com/BoschSensortec/BME280_driver bme280_compute_wait_time function
+
 	maxPressure := uint16(0)
 	maxHumidity := uint16(0)
 
@@ -392,13 +394,12 @@ func measureSleeptime(oversample uint8) time.Duration {
 	v := uint16(((1 << oversample) >> 1) + ((1 << oversample) >> 1) + ((1 << oversample) >> 1))
 
 	sleepms := (initMax + measurePerOsrsMax*v + (maxPressure) + (maxHumidity) + 15) / 16
-	fmt.Printf("sleepms = %d\n", sleepms)
+
 	return time.Duration(sleepms) * time.Millisecond
 }
 
 func shiftFunc(shift uint8) func(v uint8) uint8 {
 	return func(v uint8) uint8 {
-		// fmt.Printf("%d %b\n", v, v)
 		if v < 6 {
 			return v << shift
 		}
