@@ -2,3 +2,6 @@ language: go
 go:
   - 1.6
   - tip
+
+install:
+  - go get -u golang.org/x/exp/io/...
